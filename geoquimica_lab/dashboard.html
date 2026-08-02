@@ -150,17 +150,23 @@ const calcularQCEscalonado = (muestras) => {
 
 // --- CONSTANTES PARA OCUPACIÓN ---
 const COLORES_CURSOS = {
-    "Geo metalurgia": { bg: "rgba(59, 130, 246, 0.7)", border: "rgba(59, 130, 246, 1)" },
-    "Aguas Superficiales": { bg: "rgba(16, 185, 129, 0.7)", border: "rgba(16, 185, 129, 1)" },
-    "No Metálicos": { bg: "rgba(245, 158, 11, 0.7)", border: "rgba(245, 158, 11, 1)" },
-    "Sedimentos": { bg: "rgba(139, 92, 246, 0.7)", border: "rgba(139, 92, 246, 1)" }
+    "Geoquímica": { bg: "rgba(59, 130, 246, 0.7)", border: "rgba(59, 130, 246, 1)" },
+    "Sedimentología": { bg: "rgba(16, 185, 129, 0.7)", border: "rgba(16, 185, 129, 1)" },
+    "Comportamiento de aguas superficiales": { bg: "rgba(245, 158, 11, 0.7)", border: "rgba(245, 158, 11, 1)" },
+    "Geología Ambiental": { bg: "rgba(139, 92, 246, 0.7)", border: "rgba(139, 92, 246, 1)" },
+    "Química General": { bg: "rgba(236, 72, 153, 0.7)", border: "rgba(236, 72, 153, 1)" },
+    "Química Analítica": { bg: "rgba(20, 184, 166, 0.7)", border: "rgba(20, 184, 166, 1)" },
+    "Mineralogía y Petrología": { bg: "rgba(239, 68, 68, 0.7)", border: "rgba(239, 68, 68, 1)" },
+    "Evaluación de Impacto Ambiental": { bg: "rgba(99, 102, 241, 0.7)", border: "rgba(99, 102, 241, 1)" },
+    "Geohidrología": { bg: "rgba(249, 115, 22, 0.7)", border: "rgba(249, 115, 22, 1)" }
 };
 
 const COLORES_DOCENTES = {
     "Dr. Wilder Chuquiruna": "rgba(59, 130, 246, 1)",
     "M.Sc. Sandra Medina Paredes": "rgba(16, 185, 129, 1)",
     "M.Sc. Paul Aguilar": "rgba(245, 158, 11, 1)",
-    "M.Sc. Zoraida Remires": "rgba(139, 92, 246, 1)"
+    "M.Sc. Zoraida Remires": "rgba(139, 92, 246, 1)",
+    "M.Sc. Wilver Morales Cespedes": "rgba(236, 72, 153, 1)"
 };
 
 function App() {
@@ -227,8 +233,8 @@ function App() {
     const saved = localStorage.getItem('geo_ocupacion');
     if (saved) return JSON.parse(saved);
     return [
-      { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geo metalurgia", fecha: "2026-08-03", horas: 6 },
-      { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Aguas Superficiales", fecha: "2026-08-04", horas: 4 }
+      { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geoquímica", fecha: "2026-08-03", horas: 6 },
+      { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Química Analítica", fecha: "2026-08-04", horas: 4 }
     ];
   });
 
@@ -1828,6 +1834,7 @@ function App() {
                                     <option value="M.Sc. Sandra Medina Paredes">M.Sc. Sandra Medina Paredes</option>
                                     <option value="M.Sc. Paul Aguilar">M.Sc. Paul Aguilar</option>
                                     <option value="M.Sc. Zoraida Remires">M.Sc. Zoraida Remires</option>
+                                    <option value="M.Sc. Wilver Morales Cespedes">M.Sc. Wilver Morales Cespedes</option>
                                 </select>
                             </div>
 
@@ -1835,10 +1842,15 @@ function App() {
                                 <label className="text-xs font-bold text-slate-700">Curso / Materia</label>
                                 <select required value={ocCurso} onChange={e => setOcCurso(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition">
                                     <option value="" disabled>Seleccione un curso</option>
-                                    <option value="Geo metalurgia">Geo metalurgia</option>
-                                    <option value="Aguas Superficiales">Aguas Superficiales</option>
-                                    <option value="No Metálicos">No Metálicos</option>
-                                    <option value="Sedimentos">Sedimentos</option>
+                                    <option value="Geoquímica">Geoquímica</option>
+                                    <option value="Sedimentología">Sedimentología</option>
+                                    <option value="Comportamiento de aguas superficiales">Comportamiento de aguas superficiales</option>
+                                    <option value="Geología Ambiental">Geología Ambiental</option>
+                                    <option value="Química General">Química General</option>
+                                    <option value="Química Analítica">Química Analítica</option>
+                                    <option value="Mineralogía y Petrología">Mineralogía y Petrología</option>
+                                    <option value="Evaluación de Impacto Ambiental">Evaluación de Impacto Ambiental</option>
+                                    <option value="Geohidrología">Geohidrología</option>
                                 </select>
                             </div>
 
