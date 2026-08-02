@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Laboratorio Geoquímica</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Phosphor Icons para iconos -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Fuente Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        /* Sombras suaves para las tarjetas */
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        /* Animación para el modal */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-animate {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white shadow-sm z-10 p-4 flex justify-between items-center md:px-8 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+            <div class="bg-emerald-50 p-2 rounded-lg">
+                <i class="ph ph-flask text-3xl text-emerald-600"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl text-slate-800">Geoquímica</h1>
+                <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Panel de Laboratorio</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <!-- Info del Administrador -->
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-slate-700">Administrador</p>
+                    <p class="text-xs text-slate-500">stasilla15@unc.edu.pe</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                    S
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8">
+        
+        <!-- Tarjetas de Resumen (KPIs) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Total Horas -->
+            <div class="bg-white rounded-xl p-6 card-shadow border-l-4 border-blue-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 mb-1">Total Horas Semanales</p>
+                        <h3 class="text-3xl font-bold text-slate-800" id="kpi-total-horas">0</h3>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                        <i class="ph ph-clock text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cursos Activos -->
+            <div class="bg-white rounded-xl p-6 card-shadow border-l-4 border-emerald-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 mb-1">Cursos Registrados</p>
+                        <h3 class="text-3xl font-bold text-slate-800" id="kpi-total-cursos">0</h3>
+                    </div>
+                    <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600">
+                        <i class="ph ph-books text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Curso con más horas -->
+            <div class="bg-white rounded-xl p-6 card-shadow border-l-4 border-amber-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 mb-1">Curso de Mayor Demanda</p>
+                        <h3 class="text-xl font-bold text-slate-800 mt-1 line-clamp-1" id="kpi-curso-top">-</h3>
+                        <span class="text-amber-600 font-medium text-sm block mt-1" id="kpi-curso-top-horas">0 hrs</span>
+                    </div>
+                    <div class="p-3 bg-amber-50 rounded-lg text-amber-600">
+                        <i class="ph ph-fire text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Gráfico de Barras: Horas por Curso -->
+            <div class="bg-white p-6 rounded-xl card-shadow lg:col-span-2 border border-slate-100">
+                <h3 class="font-bold text-lg text-slate-800 mb-4">Horas Totales por Curso</h3>
+                <div class="relative h-72 w-full">
+                    <canvas id="chartCursos"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico de Pastel: Horas por Docente -->
+            <div class="bg-white p-6 rounded-xl card-shadow border border-slate-100">
+                <h3 class="font-bold text-lg text-slate-800 mb-4">Distribución por Docente</h3>
+                <div class="relative h-56 w-full flex justify-center">
+                    <canvas id="chartDocentes"></canvas>
+                </div>
+                <div class="mt-6 grid grid-cols-1 gap-2 text-sm text-slate-600" id="docentes-legend">
+                    <!-- Leyenda generada por JS -->
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl card-shadow border border-slate-100 overflow-hidden mb-8">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+                <h3 class="font-bold text-lg text-slate-800">Registros de Ingreso al Laboratorio</h3>
+                <button onclick="abrirModal()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                    <i class="ph ph-plus-circle text-lg"></i>
+                    Nuevo Registro
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                            <th class="py-4 px-6 font-semibold">Curso</th>
+                            <th class="py-4 px-6 font-semibold">Docente</th>
+                            <th class="py-4 px-6 font-semibold">Fecha</th>
+                            <th class="py-4 px-6 font-semibold text-center">Horas</th>
+                            <th class="py-4 px-6 font-semibold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-slate-700 divide-y divide-slate-100" id="tabla-registros">
+                        <!-- Llenado dinámico por JS -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Estado vacío (oculto por defecto) -->
+            <div id="empty-state" class="hidden p-8 text-center text-slate-500">
+                <i class="ph ph-folder-open text-4xl text-slate-300 mb-2"></i>
+                <p>No hay registros actuales. Haz clic en "Nuevo Registro" para empezar.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal (Oculto por defecto) -->
+    <div id="modal-agregar" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md modal-animate shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">Agregar Ingreso</h3>
+                <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="form-registro" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Docente</label>
+                    <select id="input-docente" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                        <option value="" disabled selected>Seleccione un docente</option>
+                        <option value="Dr. Wilder Chuquiruna">Dr. Wilder Chuquiruna</option>
+                        <option value="M.Sc. Sandra Medina Paredes">M.Sc. Sandra Medina Paredes</option>
+                        <option value="M.Sc. Paul Aguilar">M.Sc. Paul Aguilar</option>
+                        <option value="M.Sc. Zoraida Remires">M.Sc. Zoraida Remires</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Curso</label>
+                    <select id="input-curso" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                        <option value="" disabled selected>Seleccione un curso</option>
+                        <option value="Geo metalurgia">Geo metalurgia</option>
+                        <option value="Aguas Superficiales">Aguas Superficiales</option>
+                        <option value="No Metálicos">No Metálicos</option>
+                        <option value="Sedimentos">Sedimentos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Fecha</label>
+                    <input type="date" id="input-fecha" required class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Horas de uso</label>
+                    <input type="number" id="input-horas" required min="1" max="24" placeholder="Ej. 4" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+                        Guardar Registro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Estado y Datos ---
+        // Colores fijos para los cursos y docentes para mantener consistencia visual
+        const COLORES_CURSOS = {
+            "Geo metalurgia": { bg: "rgba(59, 130, 246, 0.7)", border: "rgba(59, 130, 246, 1)" },       // Azul
+            "Aguas Superficiales": { bg: "rgba(16, 185, 129, 0.7)", border: "rgba(16, 185, 129, 1)" },  // Verde
+            "No Metálicos": { bg: "rgba(245, 158, 11, 0.7)", border: "rgba(245, 158, 11, 1)" },         // Ámbar
+            "Sedimentos": { bg: "rgba(139, 92, 246, 0.7)", border: "rgba(139, 92, 246, 1)" }            // Morado
+        };
+
+        const COLORES_DOCENTES = {
+            "Dr. Wilder Chuquiruna": "rgba(59, 130, 246, 1)",
+            "M.Sc. Sandra Medina Paredes": "rgba(16, 185, 129, 1)",
+            "M.Sc. Paul Aguilar": "rgba(245, 158, 11, 1)",
+            "M.Sc. Zoraida Remires": "rgba(139, 92, 246, 1)"
+        };
+
+        // Estado inicial de los registros
+        let registrosLaboratorio = [
+            { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geo metalurgia", fecha: "2026-08-03", horas: 6 },
+            { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Aguas Superficiales", fecha: "2026-08-04", horas: 4 }
+        ];
+
+        // Instancias de Chart.js
+        let chartCursos, chartDocentes;
+
+        // Configuración global de Chart.js
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b'; // slate-500
+
+        // --- 2. Funciones de Interfaz (Modal) ---
+        function abrirModal() {
+            document.getElementById('modal-agregar').classList.remove('hidden');
+            document.getElementById('form-registro').reset();
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-agregar').classList.add('hidden');
+        }
+
+        // --- 3. Funciones de Lógica (CRUD) ---
+        document.getElementById('form-registro').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener datos del formulario
+            const nuevoRegistro = {
+                id: Date.now(), // ID único simple
+                docente: document.getElementById('input-docente').value,
+                curso: document.getElementById('input-curso').value,
+                fecha: document.getElementById('input-fecha').value,
+                horas: parseInt(document.getElementById('input-horas').value)
+            };
+
+            // Agregar al estado
+            registrosLaboratorio.push(nuevoRegistro);
+            
+            // Actualizar UI
+            actualizarDashboard();
+            cerrarModal();
+        });
+
+        function eliminarRegistro(id) {
+            registrosLaboratorio = registrosLaboratorio.filter(reg => reg.id !== id);
+            actualizarDashboard();
+        }
+
+        // --- 4. Renderizado ---
+        function actualizarDashboard() {
+            renderTable();
+            actualizarKPIs();
+            actualizarGraficos();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tabla-registros');
+            const emptyState = document.getElementById('empty-state');
+            
+            tbody.innerHTML = '';
+            
+            if (registrosLaboratorio.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                registrosLaboratorio.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors group";
+                    
+                    // Extraer inicial del docente
+                    const partesNombre = item.docente.split(' ');
+                    const apellido = partesNombre.length > 2 ? partesNombre[partesNombre.length - 2] : partesNombre[1];
+                    const inicial = apellido ? apellido.charAt(0) : item.docente.charAt(0);
+                    
+                    // Formatear la fecha (de YYYY-MM-DD a DD/MM/YYYY)
+                    let fechaFormateada = item.fecha;
+                    if(item.fecha && item.fecha.includes('-')) {
+                        const [year, month, day] = item.fecha.split('-');
+                        fechaFormateada = `${day}/${month}/${year}`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-6 font-medium text-slate-800 border-l-4" style="border-left-color: ${COLORES_CURSOS[item.curso].border}">${item.curso}</td>
+                        <td class="py-3 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600" style="background-color: ${COLORES_DOCENTES[item.docente]}20; color: ${COLORES_DOCENTES[item.docente]}">
+                                    ${inicial}
+                                </div>
+                                <span class="text-slate-700">${item.docente}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-6 text-slate-600 font-medium text-sm">
+                            <div class="flex items-center gap-1.5">
+                                <i class="ph ph-calendar-blank text-slate-400 text-lg"></i>
+                                ${fechaFormateada}
+                            </div>
+                        </td>
+                        <td class="py-3 px-6 text-center font-bold text-slate-700">
+                            <span class="bg-slate-100 px-3 py-1 rounded-full">${item.horas} h</span>
+                        </td>
+                        <td class="py-3 px-6 text-center">
+                            <button onclick="eliminarRegistro(${item.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Eliminar registro">
+                                <i class="ph ph-trash text-lg"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function actualizarKPIs() {
+            // Calcular total de horas
+            const totalHoras = registrosLaboratorio.reduce((sum, item) => sum + item.horas, 0);
+            document.getElementById('kpi-total-horas').textContent = totalHoras;
+
+            // Calcular cursos únicos registrados
+            const cursosUnicos = new Set(registrosLaboratorio.map(item => item.curso)).size;
+            document.getElementById('kpi-total-cursos').textContent = cursosUnicos;
+
+            // Encontrar el curso con más horas en total
+            const horasPorCurso = agruparPor('curso');
+            let cursoTop = '-';
+            let maxHoras = 0;
+            
+            for (const [curso, horas] of Object.entries(horasPorCurso)) {
+                if (horas > maxHoras) {
+                    maxHoras = horas;
+                    cursoTop = curso;
+                }
+            }
+
+            document.getElementById('kpi-curso-top').textContent = cursoTop;
+            document.getElementById('kpi-curso-top-horas').textContent = maxHoras > 0 ? `${maxHoras} hrs en total` : '0 hrs';
+        }
+
+        // Función utilitaria para agrupar horas por propiedad (curso o docente)
+        function agruparPor(propiedad) {
+            return registrosLaboratorio.reduce((acc, item) => {
+                acc[item[propiedad]] = (acc[item[propiedad]] || 0) + item.horas;
+                return acc;
+            }, {});
+        }
+
+        function actualizarGraficos() {
+            const horasPorCurso = agruparPor('curso');
+            const horasPorDocente = agruparPor('docente');
+
+            // --- Actualizar Gráfico de Cursos ---
+            const labelsCursos = Object.keys(horasPorCurso);
+            const dataCursos = Object.values(horasPorCurso);
+            const bgCursos = labelsCursos.map(c => COLORES_CURSOS[c].bg);
+            const borderCursos = labelsCursos.map(c => COLORES_CURSOS[c].border);
+
+            if (chartCursos) {
+                chartCursos.data.labels = labelsCursos;
+                chartCursos.data.datasets[0].data = dataCursos;
+                chartCursos.data.datasets[0].backgroundColor = bgCursos;
+                chartCursos.data.datasets[0].borderColor = borderCursos;
+                chartCursos.update();
+            } else {
+                const ctxCursos = document.getElementById('chartCursos').getContext('2d');
+                chartCursos = new Chart(ctxCursos, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsCursos,
+                        datasets: [{
+                            label: 'Horas Totales',
+                            data: dataCursos,
+                            backgroundColor: bgCursos,
+                            borderColor: borderCursos,
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            barThickness: 'flex',
+                            maxBarThickness: 50
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { borderDash: [4, 4], color: '#e2e8f0' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- Actualizar Gráfico de Docentes ---
+            const labelsDocentes = Object.keys(horasPorDocente);
+            const dataDocentes = Object.values(horasPorDocente);
+            const coloresDocentesList = labelsDocentes.map(d => COLORES_DOCENTES[d]);
+
+            if (chartDocentes) {
+                chartDocentes.data.labels = labelsDocentes;
+                chartDocentes.data.datasets[0].data = dataDocentes;
+                chartDocentes.data.datasets[0].backgroundColor = coloresDocentesList;
+                chartDocentes.update();
+            } else {
+                const ctxDocentes = document.getElementById('chartDocentes').getContext('2d');
+                chartDocentes = new Chart(ctxDocentes, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labelsDocentes,
+                        datasets: [{
+                            data: dataDocentes,
+                            backgroundColor: coloresDocentesList,
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { display: false } // Usamos leyenda HTML personalizada
+                        }
+                    }
+                });
+            }
+
+            // Actualizar leyenda HTML de docentes
+            const legendContainer = document.getElementById('docentes-legend');
+            legendContainer.innerHTML = '';
+            labelsDocentes.forEach(docente => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 rounded bg-slate-50";
+                
+                // Formatear nombre corto
+                const partes = docente.split(' ');
+                const nombreCorto = partes.length > 2 ? `${partes[0]} ${partes[partes.length - 2]} ${partes[partes.length - 1]}` : docente;
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${COLORES_DOCENTES[docente]}"></span>
+                        <span class="truncate font-medium text-slate-700" title="${docente}">${nombreCorto}</span>
+                    </div>
+                    <span class="font-bold text-slate-800">${horasPorDocente[docente]}h</span>
+                `;
+                legendContainer.appendChild(div);
+            });
+        }
+
+        // Inicializar el Dashboard al cargar la página
+        actualizarDashboard();
+
+    </script>
+</body>
+</html>

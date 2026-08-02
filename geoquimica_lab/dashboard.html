@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraceLabs Dashboard - LabGeoquímica</title>
+    <!-- Tailwind CSS para los estilos del dashboard -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- React y ReactDOM UMD -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Lucide-React UMD -->
+    <script>window.react = window.React; // Solución para compatibilidad UMD</script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.292.0/dist/umd/lucide-react.js" crossorigin="anonymous"></script>
+
+    <!-- Babel para compilar React/JSX directamente en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
+    <script>
+        Babel.registerPreset('react-classic', {
+            presets: [
+                [Babel.availablePresets['react'], { runtime: 'classic' }]
+            ]
+        });
+    </script>
+</head>
+<body class="bg-slate-50">
+    <!-- Catch errors and display them on screen for debugging -->
+    <script>
+        window.addEventListener('error', function(event) {
+            document.body.innerHTML += '<div style="color:red; padding: 20px; font-family: monospace; z-index: 9999; position: relative;"><h3>Error de JavaScript detectado:</h3><p>' + event.message + '</p><p>En: ' + event.filename + ':' + event.lineno + '</p></div>';
+        });
+    </script>
+    <!-- Contenedor principal donde React renderizará la aplicación -->
+    <div id="root"></div>
+
+    <!-- El código de React va aquí -->
+    <script type="text/babel" data-presets="env,react-classic">
+        // Extracción de dependencias desde variables globales (UMD)
+        const React = window.React;
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = window.ReactDOM;
+        const { 
+          FlaskConical, 
+          Sliders, 
+          Plus, 
+          Calendar, 
+          TrendingDown, 
+          ClipboardList, 
+          AlertTriangle, 
+          CheckCircle2, 
+          Info, 
+          Trash2, 
+          Sparkles,
+          RefreshCw,
+          Layers,
+          Database,
+          Users,
+          Clock,
+          BookOpen,
+          Flame,
+          PlusCircle,
+          X,
+          FolderOpen
+        } = window.LucideReact;
+
+// BASE DE DATOS INICIAL EXTRAÍDA DE LAS IMÁGENES DEL USUARIO
+const INVENTARIO_INICIAL = [
+  { id: 1, name: "Peróxido de hidrógeno 30%", code: "RQ-001-GEO", brand: "Supelco", lot: "K56224210445", expiry: "2029-09-30", unitVol: 1000, quantity: 2, state: "Vigente" },
+  { id: 2, name: "Ácido sulfúrico", code: "RQ-002-GEO", brand: "Spectrum", lot: "1NK0081", expiry: "N.I", unitVol: 2500, quantity: 2, state: "Vigente" },
+  { id: 3, name: "Ácido perclórico", code: "RQ-003-GEO", brand: "Spectrum", lot: "2LF0015", expiry: "2026-09-01", unitVol: 1000, quantity: 2, state: "Vigente" },
+  { id: 4, name: "Ácido Nítrico", code: "RQ-004-GEO", brand: "Spectrum", lot: "2HG14", expiry: "2026-10-01", unitVol: 1000, quantity: 2, state: "Vigente" },
+  { id: 5, name: "Ácido clorhídrico", code: "RQ-005-GEO", brand: "Spectrum", lot: "71345", expiry: "2026-09-01", unitVol: 1000, quantity: 1, state: "Vigente" },
+  { id: 6, name: "Ácido perclórico", code: "RQ-006-GEO", brand: "Spectrum", lot: "97051", expiry: "2026-09-01", unitVol: 1000, quantity: 2, state: "Vigente" },
+  { id: 7, name: "Ácido sulfúrico", code: "RQ-007-GEO", brand: "Spectrum", lot: "73540", expiry: "2026-08-01", unitVol: 500, quantity: 2, state: "Vigente" },
+  { id: 8, name: "Estándar de plomo (Pb)", code: "RQ-008-GEO", brand: "Agilent Technologies", lot: "0981329151", expiry: "2021-02-28", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 9, name: "Estándar Cobre (Cu)", code: "RQ-009-GEO", brand: "Agilent Technologies", lot: "0101965217", expiry: "2021-03-06", unitVol: 500, quantity: 2, state: "Vencido" },
+  { id: 10, name: "Estándar Nickel (Ni)", code: "RQ-010-GEO", brand: "Agilent Technologies", lot: "098427378", expiry: "2021-02-19", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 11, name: "Estándar Zinc (Zinc)", code: "RQ-011-GEO", brand: "Agilent Technologies", lot: "0100792233", expiry: "2023-07-02", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 12, name: "Blanco de calibración", code: "RQ-012-GEO", brand: "Agilent Technologies", lot: "0010248911", expiry: "2021-05-01", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 13, name: "Estándar Cadmio (Cd)", code: "RQ-013-GEO", brand: "Agilent Technologies", lot: "0010092053", expiry: "2021-03-11", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 14, name: "Estándar Bario (Ba)", code: "RQ-014-GEO", brand: "Agilent Technologies", lot: "0099463476", expiry: "2021-07-01", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 15, name: "Perclorato de potasio", code: "RQ-015-GEO", brand: "Spectrum", lot: "1HB02", expiry: "2026-09-01", unitVol: 1000, quantity: 1, state: "Vigente" },
+  { id: 16, name: "Borato de litio", code: "RQ-016-GEO", brand: "Spectrum", lot: "98340", expiry: "2026-09-01", unitVol: 100, quantity: 1, state: "Vigente" },
+  { id: 17, name: "Nitrato de aluminio", code: "RQ-017-GEO", brand: "Spectrum", lot: "18855", expiry: "2026-08-01", unitVol: 100, quantity: 1, state: "Vigente" },
+  { id: 18, name: "Ácido Fluorhídrico", code: "RQ-018-GEO", brand: "Baker Analyzed", lot: "9560 01", expiry: "2026-05-19", unitVol: 1000, quantity: 2, state: "Vigente" },
+  { id: 19, name: "Estándar de Arsenico (As)", code: "RQ-019-GEO", brand: "Agilent Technologies", lot: "01033490425", expiry: "2026-05-18", unitVol: 500, quantity: 1, state: "Vigente" },
+  { id: 20, name: "Estándar Cadmio (Cd)", code: "RQ-020-GEO", brand: "Agilent Technologies", lot: "0099663176", expiry: "2021-05-14", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 21, name: "Estándar de Mercurio (Hg)", code: "RQ-021-GEO", brand: "Agilent Technologies", lot: "0100990470", expiry: "2021-05-12", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 22, name: "Estándar Hierro (Fe)", code: "RQ-022-GEO", brand: "Agilent Technologies", lot: "0994438R59", expiry: "2021-03-24", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 23, name: "Estándar aluminio (Al)", code: "RQ-023-GEO", brand: "Agilent Technologies", lot: "0100418223", expiry: "2021-06-07", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 24, name: "Estándar Calcio (Ca)", code: "RQ-024-GEO", brand: "Agilent Technologies", lot: "0097907066", expiry: "2020-12-27", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 25, name: "Estándar Manganeso (Mn)", code: "RQ-025-GEO", brand: "Agilent Technologies", lot: "0099748799", expiry: "2021-06-11", unitVol: 500, quantity: 1, state: "Vencido" },
+  { id: 26, name: "Estándar de Cromo (Cr)", code: "RQ-026-GEO", brand: "Agilent Technologies", lot: "0101480322", expiry: "2021-08-10", unitVol: 500, quantity: 1, state: "Vigente" },
+  { id: 27, name: "Estándar de Cobalto (Co)", code: "RQ-027-GEO", brand: "Agilent Technologies", lot: "0102490436", expiry: "2021-08-07", unitVol: 500, quantity: 1, state: "Vigente" },
+  { id: 28, name: "Ácido clorhídrico", code: "RQ-028-GEO", brand: "Spectrum", lot: "2024080149", expiry: "N.I", unitVol: 2500, quantity: 2, state: "Vigente" },
+  { id: 29, name: "Ácido Fluorhídrico", code: "RQ-029-GEO", brand: "Spectrum", lot: "96377", expiry: "2026-09-01", unitVol: 1000, quantity: 1, state: "Vigente" },
+  { id: 30, name: "Ácido Nitrico", code: "RQ-030-GEO", brand: "Spectrum", lot: "2NK0095", expiry: "N.I", unitVol: 2500, quantity: 2, state: "Vigente" },
+  { id: 31, name: "Estándar Oro", code: "RQ-031-GEO", brand: "Supelco", lot: "HC45305916", expiry: "2028-07-31", unitVol: 500, quantity: 1, state: "Vigente" },
+  { id: 32, name: "Estándar Plata", code: "RQ-032-GEO", brand: "Supelco", lot: "HC45303897", expiry: "2028-06-30", unitVol: 500, quantity: 1, state: "Vigente" }
+];
+
+// MODELO DE CONSUMO UNITARIO REAL DE STOCK (ml de reactivo puro por análisis procesado)
+const METODOS_DICCIONARIO = {
+  "Metales Suelo": {
+    name: "Metales en Suelo",
+    desc: "Ataque multácido (HNO3, HCl, H2O2) para metales pesados en matriz suelo.",
+    // HNO3: 5ml puro + 10ml de solución 1:1 (que contiene 5ml puro) = 10ml neto por análisis total
+    con_hno3: 10,   
+    con_hcl: 10,    // 10ml de HCl puro
+    con_h2o2: 3,    // 3ml de Peróxido 30%
+  },
+  "Oro y Plata": {
+    name: "Oro y Plata",
+    desc: "Digestión regia de metales nobles.",
+    con_hno3: 5,    // 5ml puro por análisis total
+    con_hcl: 25,    // 25ml puro por análisis total
+    con_h2o2: 0,
+  },
+  "Aguas Acuosas": {
+    name: "Aguas Acuosas",
+    desc: "Preservación y digestión de aguas limpias.",
+    con_hno3: 2,    // 2ml puro por análisis total
+    con_hcl: 0,
+    con_h2o2: 0,
+  },
+  "Aguas no Acuosas": {
+    name: "Aguas no Acuosas",
+    desc: "Aguas residuales u orgánicas con digestión ácida diluida.",
+    // HNO3 1:1 gasta 4ml de solución (2ml neto puro)
+    con_hno3: 2,    
+    // HCl 1:4 gasta 10ml de solución (2ml neto puro)
+    con_hcl: 2,     
+    con_h2o2: 0,
+  }
+};
+
+// Función para calcular los Controles de Calidad (QC) según la regla escalonada del usuario
+const calcularQCEscalonado = (muestras) => {
+  if (muestras <= 0) return 0;
+  // Menos o igual a 10 muestras -> 3 QC
+  // 11 a 20 -> 4 QC
+  // 21 a 30 -> 5 QC
+  // 31 a 40 -> 6 QC... etc.
+  return Math.floor((muestras - 1) / 10) + 3;
+};
+
+// --- CONSTANTES PARA OCUPACIÓN ---
+const COLORES_CURSOS = {
+    "Geo metalurgia": { bg: "rgba(59, 130, 246, 0.7)", border: "rgba(59, 130, 246, 1)" },
+    "Aguas Superficiales": { bg: "rgba(16, 185, 129, 0.7)", border: "rgba(16, 185, 129, 1)" },
+    "No Metálicos": { bg: "rgba(245, 158, 11, 0.7)", border: "rgba(245, 158, 11, 1)" },
+    "Sedimentos": { bg: "rgba(139, 92, 246, 0.7)", border: "rgba(139, 92, 246, 1)" }
+};
+
+const COLORES_DOCENTES = {
+    "Dr. Wilder Chuquiruna": "rgba(59, 130, 246, 1)",
+    "M.Sc. Sandra Medina Paredes": "rgba(16, 185, 129, 1)",
+    "M.Sc. Paul Aguilar": "rgba(245, 158, 11, 1)",
+    "M.Sc. Zoraida Remires": "rgba(139, 92, 246, 1)"
+};
+
+function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Estado real de volumen en las botellas (físico disminuye con registros reales)
+  const [inventario, setInventario] = useState(() => {
+    return INVENTARIO_INICIAL.map(item => ({
+      ...item,
+      currentVol: item.unitVol * item.quantity,
+      initialVol: item.unitVol * item.quantity
+    }));
+  });
+
+  // Estado del planificador / simulador dinámico por MUESTRAS (comerciales/reales)
+  const [simMetalesSamples, setSimMetalesSamples] = useState(0); 
+  const [simOroPlataSamples, setSimOroPlataSamples] = useState(0); 
+  const [simAguasAcuosasSamples, setSimAguasAcuosasSamples] = useState(0); 
+  const [simAguasNoAcuosasSamples, setSimAguasNoAcuosasSamples] = useState(0); 
+
+  // Historial de consumo real de reactivos registrados
+  const [history, setHistory] = useState([
+    { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
+    { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
+    { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
+  ]);
+
+  // Formulario para registrar muestras reales
+  const [formMethod, setFormMethod] = useState("Metales Suelo");
+  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formSamples, setFormSamples] = useState(10);
+  const [isCustomConsumption, setIsCustomConsumption] = useState(false);
+  const [customHno3, setCustomHno3] = useState(0);
+  const [customHcl, setCustomHcl] = useState(0);
+  const [customH2o2, setCustomH2o2] = useState(0);
+  const [formNotes, setFormNotes] = useState("");
+  const [notification, setNotification] = useState(null);
+
+  // Formulario de ingreso de nuevo reactivo al inventario
+  const [newReagentName, setNewReagentName] = useState("Ácido Nitrico");
+  const [newReagentCode, setNewReagentCode] = useState("RQ-NEW-GEO");
+  const [newReagentBrand, setNewReagentBrand] = useState("Spectrum");
+  const [newReagentLot, setNewReagentLot] = useState("");
+  const [newReagentExpiry, setNewReagentExpiry] = useState("2028-12-31");
+  const [newReagentVol, setNewReagentVol] = useState(1000);
+  const [newReagentQty, setNewReagentQty] = useState(1);
+
+  // --- Estado de Ocupación de Laboratorio ---
+  const [registrosLaboratorio, setRegistrosLaboratorio] = useState([
+      { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geo metalurgia", fecha: "2026-08-03", horas: 6 },
+      { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Aguas Superficiales", fecha: "2026-08-04", horas: 4 }
+  ]);
+  const [isOcupacionModalOpen, setIsOcupacionModalOpen] = useState(false);
+  const [ocDocente, setOcDocente] = useState("");
+  const [ocCurso, setOcCurso] = useState("");
+  const [ocFecha, setOcFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [ocHoras, setOcHoras] = useState(1);
+
+  // 1. CÁLCULO DE STOCK DISPONIBLE NETO ACTUAL VIGENTE
+  const stockDisponible = useMemo(() => {
+    const totals = { "Ácido Nitrico": 0, "Ácido clorhídrico": 0, "Peróxido de hidrógeno 30%": 0 };
+    inventario.forEach(item => {
+      if (item.state === "Vigente") {
+        if (item.name === "Ácido Nitrico") totals["Ácido Nitrico"] += item.currentVol;
+        if (item.name === "Ácido clorhídrico") totals["Ácido clorhídrico"] += item.currentVol;
+        if (item.name === "Peróxido de hidrógeno 30%") totals["Peróxido de hidrógeno 30%"] += item.currentVol;
+      }
+    });
+    return totals;
+  }, [inventario]);
+
+  // QC Calculados para cada deslizador del planificador
+  const simMetalesQC = useMemo(() => calcularQCEscalonado(simMetalesSamples), [simMetalesSamples]);
+  const simOroPlataQC = useMemo(() => calcularQCEscalonado(simOroPlataSamples), [simOroPlataSamples]);
+  const simAguasAcuosasQC = useMemo(() => calcularQCEscalonado(simAguasAcuosasSamples), [simAguasAcuosasSamples]);
+  const simAguasNoAcuosasQC = useMemo(() => calcularQCEscalonado(simAguasNoAcuosasSamples), [simAguasNoAcuosasSamples]);
+
+  // Total de análisis individuales (Muestras + QC) en simulación
+  const simMetalesTotal = simMetalesSamples + simMetalesQC;
+  const simOroPlataTotal = simOroPlataSamples + simOroPlataQC;
+  const simAguasAcuosasTotal = simAguasAcuosasSamples + simAguasAcuosasQC;
+  const simAguasNoAcuosasTotal = simAguasNoAcuosasSamples + simAguasNoAcuosasQC;
+
+  // 2. CÁLCULO DE CONSUMO DE LA SIMULACIÓN ACTUAL (PLANIFICADOR)
+  const consumoSimulado = useMemo(() => {
+    let hno3 = 0;
+    let hcl = 0;
+    let h2o2 = 0;
+
+    // Metales Suelo
+    hno3 += simMetalesTotal * METODOS_DICCIONARIO["Metales Suelo"].con_hno3;
+    hcl += simMetalesTotal * METODOS_DICCIONARIO["Metales Suelo"].con_hcl;
+    h2o2 += simMetalesTotal * METODOS_DICCIONARIO["Metales Suelo"].con_h2o2;
+
+    // Oro y Plata
+    hno3 += simOroPlataTotal * METODOS_DICCIONARIO["Oro y Plata"].con_hno3;
+    hcl += simOroPlataTotal * METODOS_DICCIONARIO["Oro y Plata"].con_hcl;
+    h2o2 += simOroPlataTotal * METODOS_DICCIONARIO["Oro y Plata"].con_h2o2;
+
+    // Aguas Acuosas
+    hno3 += simAguasAcuosasTotal * METODOS_DICCIONARIO["Aguas Acuosas"].con_hno3;
+    hcl += simAguasAcuosasTotal * METODOS_DICCIONARIO["Aguas Acuosas"].con_hcl;
+    h2o2 += simAguasAcuosasTotal * METODOS_DICCIONARIO["Aguas Acuosas"].con_h2o2;
+
+    // Aguas no Acuosas
+    hno3 += simAguasNoAcuosasTotal * METODOS_DICCIONARIO["Aguas no Acuosas"].con_hno3;
+    hcl += simAguasNoAcuosasTotal * METODOS_DICCIONARIO["Aguas no Acuosas"].con_hcl;
+    h2o2 += simAguasNoAcuosasTotal * METODOS_DICCIONARIO["Aguas no Acuosas"].con_h2o2;
+
+    return { hno3, hcl, h2o2 };
+  }, [simMetalesTotal, simOroPlataTotal, simAguasAcuosasTotal, simAguasNoAcuosasTotal]);
+
+  // Calcular cantidad de muestras adicionales máximas que pueden procesarse con un stock de reactivos determinado
+  const calcularMaxMuestrasPosibles = (stock, metodo) => {
+    const def = METODOS_DICCIONARIO[metodo];
+    const limites = [];
+    if (def.con_hno3 > 0) limites.push(stock["Ácido Nitrico"] / def.con_hno3);
+    if (def.con_hcl > 0) limites.push(stock["Ácido clorhídrico"] / def.con_hcl);
+    if (def.con_h2o2 > 0) limites.push(stock["Peróxido de hidrógeno 30%"] / def.con_h2o2);
+    
+    const maxTotalTests = limites.length > 0 ? Math.floor(Math.min(...limites)) : 0;
+    if (maxTotalTests <= 0) return { muestras: 0, qc: 0, total: 0 };
+
+    // Encontramos el número máximo de muestras reales que junto con sus QC no superan maxTotalTests
+    let bestSamples = 0;
+    let bestQC = 0;
+    for (let s = 1; s <= maxTotalTests; s++) {
+      const qc = calcularQCEscalonado(s);
+      if (s + qc <= maxTotalTests) {
+        bestSamples = s;
+        bestQC = qc;
+      } else {
+        break;
+      }
+    }
+    return {
+      muestras: bestSamples,
+      qc: bestQC,
+      total: bestSamples + bestQC
+    };
+  };
+
+  // 3. AUTONOMÍA EXCLUSIVA MÁXIMA DE CADA MÉTODO CON EL STOCK DISPONIBLE ACTUAL
+  const autonomiaExclusiva = useMemo(() => {
+    return {
+      metales: calcularMaxMuestrasPosibles(stockDisponible, "Metales Suelo"),
+      oroPlata: calcularMaxMuestrasPosibles(stockDisponible, "Oro y Plata"),
+      aguasAcuosas: calcularMaxMuestrasPosibles(stockDisponible, "Aguas Acuosas"),
+      aguasNoAcuosas: calcularMaxMuestrasPosibles(stockDisponible, "Aguas no Acuosas")
+    };
+  }, [stockDisponible]);
+
+  // 4. AUTONOMÍA RESTANTE COMBINADA (Después del gasto simulado en el planificador)
+  const stockRemanenteSimulado = useMemo(() => {
+    return {
+      "Ácido Nitrico": Math.max(0, stockDisponible["Ácido Nitrico"] - consumoSimulado.hno3),
+      "Ácido clorhídrico": Math.max(0, stockDisponible["Ácido clorhídrico"] - consumoSimulado.hcl),
+      "Peróxido de hidrógeno 30%": Math.max(0, stockDisponible["Peróxido de hidrógeno 30%"] - consumoSimulado.h2o2)
+    };
+  }, [stockDisponible, consumoSimulado]);
+
+  const autonomiaCombinadaRestante = useMemo(() => {
+    return {
+      metales: calcularMaxMuestrasPosibles(stockRemanenteSimulado, "Metales Suelo"),
+      oroPlata: calcularMaxMuestrasPosibles(stockRemanenteSimulado, "Oro y Plata"),
+      aguasAcuosas: calcularMaxMuestrasPosibles(stockRemanenteSimulado, "Aguas Acuosas"),
+      aguasNoAcuosas: calcularMaxMuestrasPosibles(stockRemanenteSimulado, "Aguas no Acuosas")
+    };
+  }, [stockRemanenteSimulado]);
+
+  // PRESETS DEL SIMULADOR
+  const aplicarPreset = (tipo) => {
+    limpiarSimulador();
+    setTimeout(() => {
+      if (tipo === 'metales') {
+        setSimMetalesSamples(autonomiaExclusiva.metales.muestras);
+      } else if (tipo === 'oro_plata') {
+        setSimOroPlataSamples(autonomiaExclusiva.oroPlata.muestras);
+      } else if (tipo === 'aguas') {
+        // Distribuimos equitativamente los remanentes entre aguas limpias y no acuosas
+        setSimAguasAcuosasSamples(Math.floor(autonomiaExclusiva.aguasAcuosas.muestras / 2));
+        setSimAguasNoAcuosasSamples(Math.floor(autonomiaExclusiva.aguasNoAcuosas.muestras / 2));
+      }
+    }, 10);
+  };
+
+  const limpiarSimulador = () => {
+    setSimMetalesSamples(0);
+    setSimOroPlataSamples(0);
+    setSimAguasAcuosasSamples(0);
+    setSimAguasNoAcuosasSamples(0);
+  };
+
+  // REGISTRO DE TRABAJOS REALES Y DESCUENTO DE STOCK DE BOTELLAS VIGENTES
+  const handleRegistrarRun = (e) => {
+    e.preventDefault();
+
+    const qcRequired = calcularQCEscalonado(formSamples);
+    const totalAnalysis = formSamples + qcRequired;
+
+    let hno3Gasto = 0;
+    let hclGasto = 0;
+    let h2o2Gasto = 0;
+
+    if (isCustomConsumption) {
+      hno3Gasto = Number(customHno3);
+      hclGasto = Number(customHcl);
+      h2o2Gasto = Number(customH2o2);
+    } else {
+      const def = METODOS_DICCIONARIO[formMethod];
+      hno3Gasto = def.con_hno3 * totalAnalysis;
+      hclGasto = def.con_hcl * totalAnalysis;
+      h2o2Gasto = def.con_h2o2 * totalAnalysis;
+    }
+
+    // Validar stock antes de la operación
+    if (
+      hno3Gasto > stockDisponible["Ácido Nitrico"] ||
+      hclGasto > stockDisponible["Ácido clorhídrico"] ||
+      h2o2Gasto > stockDisponible["Peróxido de hidrógeno 30%"]
+    ) {
+      triggerNotification("⚠️ No es posible registrar: El gasto calculado excede el stock disponible en bodega.", "error");
+      return;
+    }
+
+    // Descontar del inventario físico (FIFO)
+    setInventario(prevInv => {
+      let remHno3 = hno3Gasto;
+      let remHcl = hclGasto;
+      let remH2o2 = h2o2Gasto;
+
+      return prevInv.map(item => {
+        if (item.state !== "Vigente") return item;
+        let updateCurrent = item.currentVol;
+
+        if (item.name === "Ácido Nitrico" && remHno3 > 0) {
+          if (updateCurrent >= remHno3) {
+            updateCurrent -= remHno3;
+            remHno3 = 0;
+          } else {
+            remHno3 -= updateCurrent;
+            updateCurrent = 0;
+          }
+        }
+        if (item.name === "Ácido clorhídrico" && remHcl > 0) {
+          if (updateCurrent >= remHcl) {
+            updateCurrent -= remHcl;
+            remHcl = 0;
+          } else {
+            remHcl -= updateCurrent;
+            updateCurrent = 0;
+          }
+        }
+        if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
+          if (updateCurrent >= remH2o2) {
+            updateCurrent -= remH2o2;
+            remH2o2 = 0;
+          } else {
+            remH2o2 -= updateCurrent;
+            updateCurrent = 0;
+          }
+        }
+
+        return { ...item, currentVol: updateCurrent };
+      });
+    });
+
+    // Añadir al historial
+    const nuevoRegistro = {
+      id: Date.now(),
+      date: formDate,
+      method: formMethod,
+      samples: Number(formSamples),
+      qc: qcRequired,
+      totalTests: totalAnalysis,
+      hno3: hno3Gasto,
+      hcl: hclGasto,
+      h2o2: h2o2Gasto,
+      notes: formNotes || "Registro manual de corrida"
+    };
+
+    setHistory(prev => [nuevoRegistro, ...prev]);
+
+    // Limpieza
+    setFormSamples(10);
+    setFormNotes("");
+    setIsCustomConsumption(false);
+    setCustomHno3(0);
+    setCustomHcl(0);
+    setCustomH2o2(0);
+
+    triggerNotification("🚀 Corrida de análisis registrada. El stock de frascos y las gráficas se actualizaron.", "success");
+  };
+
+  // AGREGAR NUEVO FRASCO AL INVENTARIO
+  const handleAddNewReagent = (e) => {
+    e.preventDefault();
+    if (!newReagentLot) {
+      triggerNotification("⚠️ Por favor ingresa el número de Lote del fabricante.", "error");
+      return;
+    }
+
+    const totalVolume = Number(newReagentVol) * Number(newReagentQty);
+    const nuevoItem = {
+      id: Date.now(),
+      name: newReagentName,
+      code: newReagentCode,
+      brand: newReagentBrand,
+      lot: newReagentLot,
+      expiry: newReagentExpiry,
+      unitVol: Number(newReagentVol),
+      quantity: Number(newReagentQty),
+      state: "Vigente",
+      currentVol: totalVolume,
+      initialVol: totalVolume
+    };
+
+    setInventario(prev => [...prev, nuevoItem]);
+    setNewReagentLot("");
+    triggerNotification(`📦 Añadidos ${newReagentQty} frascos de ${newReagentName} al stock general.`, "success");
+  };
+
+  // CAMBIAR ESTADO DE REACTIVOS
+  const toggleReagentState = (id, newState) => {
+    setInventario(prev => prev.map(item => {
+      if (item.id === id) {
+        const currentVol = newState === 'Agotado' ? 0 : item.initialVol;
+        return { ...item, state: newState, currentVol };
+      }
+      return item;
+    }));
+    triggerNotification("🔧 Estado del frasco actualizado con éxito.", "success");
+  };
+
+  // ELIMINAR REGISTRO DE TRABAJO Y DEVOLVER REACTIVOS AL STOCK
+  const handleDeleteLog = (log) => {
+    setInventario(prevInv => {
+      let remHno3 = log.hno3;
+      let remHcl = log.hcl;
+      let remH2o2 = log.h2o2;
+
+      return prevInv.map(item => {
+        if (item.state !== "Vigente") return item;
+        let updateCurrent = item.currentVol;
+        const maxCapacity = item.unitVol * item.quantity;
+
+        if (item.name === "Ácido Nitrico" && remHno3 > 0) {
+          const space = maxCapacity - updateCurrent;
+          if (space >= remHno3) {
+            updateCurrent += remHno3;
+            remHno3 = 0;
+          } else {
+            remHno3 -= space;
+            updateCurrent = maxCapacity;
+          }
+        }
+        if (item.name === "Ácido clorhídrico" && remHcl > 0) {
+          const space = maxCapacity - updateCurrent;
+          if (space >= remHcl) {
+            updateCurrent += remHcl;
+            remHcl = 0;
+          } else {
+            remHcl -= space;
+            updateCurrent = maxCapacity;
+          }
+        }
+        if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
+          const space = maxCapacity - updateCurrent;
+          if (space >= remH2o2) {
+            updateCurrent += remH2o2;
+            remH2o2 = 0;
+          } else {
+            remH2o2 -= space;
+            updateCurrent = maxCapacity;
+          }
+        }
+
+        return { ...item, currentVol: updateCurrent };
+      });
+    });
+
+    setHistory(prev => prev.filter(item => item.id !== log.id));
+    triggerNotification("🗑️ Registro de corrida eliminado. Los reactivos fueron repuestos en sus respectivos envases.", "success");
+  };
+
+  const triggerNotification = (msg, type = "success") => {
+    setNotification({ text: msg, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  // --- KPIs y Cálculos Ocupación ---
+  const ocTotalHoras = useMemo(() => registrosLaboratorio.reduce((sum, item) => sum + item.horas, 0), [registrosLaboratorio]);
+  const ocCursosUnicos = useMemo(() => new Set(registrosLaboratorio.map(item => item.curso)).size, [registrosLaboratorio]);
+  
+  const horasPorCurso = useMemo(() => {
+    return registrosLaboratorio.reduce((acc, item) => {
+      acc[item.curso] = (acc[item.curso] || 0) + item.horas;
+      return acc;
+    }, {});
+  }, [registrosLaboratorio]);
+
+  const horasPorDocente = useMemo(() => {
+    return registrosLaboratorio.reduce((acc, item) => {
+      acc[item.docente] = (acc[item.docente] || 0) + item.horas;
+      return acc;
+    }, {});
+  }, [registrosLaboratorio]);
+
+  const ocCursoTop = useMemo(() => {
+    let top = '-';
+    let max = 0;
+    for (const [curso, horas] of Object.entries(horasPorCurso)) {
+      if (horas > max) { max = horas; top = curso; }
+    }
+    return { nombre: top, horas: max };
+  }, [horasPorCurso]);
+
+  const handleRegistrarOcupacion = (e) => {
+    e.preventDefault();
+    if (!ocDocente || !ocCurso) {
+      triggerNotification("⚠️ Seleccione docente y curso.", "error");
+      return;
+    }
+    const nuevoRegistro = {
+      id: Date.now(),
+      docente: ocDocente,
+      curso: ocCurso,
+      fecha: ocFecha,
+      horas: Number(ocHoras)
+    };
+    setRegistrosLaboratorio(prev => [nuevoRegistro, ...prev]);
+    setIsOcupacionModalOpen(false);
+    setOcDocente("");
+    setOcCurso("");
+    setOcHoras(1);
+    triggerNotification("Registro de ocupación agregado exitosamente.", "success");
+  };
+
+  const handleEliminarOcupacion = (id) => {
+    setRegistrosLaboratorio(prev => prev.filter(reg => reg.id !== id));
+    triggerNotification("Registro de ocupación eliminado.", "success");
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'ocupacion') return;
+    
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    let chartCursosInstance = null;
+    let chartDocentesInstance = null;
+
+    const ctxCursos = document.getElementById('chartCursos');
+    const ctxDocentes = document.getElementById('chartDocentes');
+
+    if (ctxCursos) {
+      const labelsCursos = Object.keys(horasPorCurso);
+      const dataCursos = Object.values(horasPorCurso);
+      const bgCursos = labelsCursos.map(c => COLORES_CURSOS[c]?.bg || '#cbd5e1');
+      const borderCursos = labelsCursos.map(c => COLORES_CURSOS[c]?.border || '#94a3b8');
+
+      chartCursosInstance = new Chart(ctxCursos, {
+        type: 'bar',
+        data: {
+          labels: labelsCursos,
+          datasets: [{
+            data: dataCursos,
+            backgroundColor: bgCursos,
+            borderColor: borderCursos,
+            borderWidth: 1,
+            borderRadius: 6,
+            barThickness: 'flex',
+            maxBarThickness: 50
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#e2e8f0' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    if (ctxDocentes) {
+      const labelsDocentes = Object.keys(horasPorDocente);
+      const dataDocentes = Object.values(horasPorDocente);
+      const coloresDocentesList = labelsDocentes.map(d => COLORES_DOCENTES[d] || '#cbd5e1');
+
+      chartDocentesInstance = new Chart(ctxDocentes, {
+        type: 'doughnut',
+        data: {
+          labels: labelsDocentes,
+          datasets: [{
+            data: dataDocentes,
+            backgroundColor: coloresDocentesList,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '70%',
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    return () => {
+      if (chartCursosInstance) chartCursosInstance.destroy();
+      if (chartDocentesInstance) chartDocentesInstance.destroy();
+    };
+  }, [activeTab, horasPorCurso, horasPorDocente]);
+
+  // CONSTRUCCIÓN DE LA CURVA CRONOLÓGICA DE DESCENSO
+  const chartData = useMemo(() => {
+    let runningHno3 = stockDisponible["Ácido Nitrico"];
+    let runningHcl = stockDisponible["Ácido clorhídrico"];
+    let runningH2o2 = stockDisponible["Peróxido de hidrógeno 30%"];
+
+    const points = [];
+    points.push({
+      label: "Hoy",
+      hno3: runningHno3,
+      hcl: runningHcl,
+      h2o2: runningH2o2
+    });
+
+    history.forEach(item => {
+      runningHno3 += item.hno3;
+      runningHcl += item.hcl;
+      runningH2o2 += item.h2o2;
+      points.push({
+        label: item.date.slice(5),
+        hno3: runningHno3,
+        hcl: runningHcl,
+        h2o2: runningH2o2
+      });
+    });
+
+    return points.reverse();
+  }, [history, stockDisponible]);
+
+  // ALERTAS GENERALES DEL SISTEMA
+  const alertasReactivos = useMemo(() => {
+    const alertas = [];
+    if (stockDisponible["Ácido Nitrico"] < 1500) {
+      alertas.push({ type: "warning", message: `El nivel acumulado de Ácido Nítrico está por debajo de 1500 mL (${stockDisponible["Ácido Nitrico"]} mL restantes).` });
+    }
+    if (stockDisponible["Ácido clorhídrico"] < 1500) {
+      alertas.push({ type: "warning", message: `El nivel acumulado de Ácido Clorhídrico está por debajo de 1500 mL (${stockDisponible["Ácido clorhídrico"]} mL restantes).` });
+    }
+    if (stockDisponible["Peróxido de hidrógeno 30%"] < 500) {
+      alertas.push({ type: "warning", message: `El nivel acumulado de Peróxido de Hidrógeno está por debajo de 500 mL (${stockDisponible["Peróxido de hidrógeno 30%"]} mL restantes).` });
+    }
+
+    const vencidos = inventario.filter(i => i.state === "Vencido").length;
+    if (vencidos > 0) {
+      alertas.push({ type: "danger", message: `Atención: Se identificaron ${vencidos} estándares analíticos cuya fecha de validez ha expirado.` });
+    }
+
+    return alertas;
+  }, [stockDisponible, inventario]);
+
+  // Dibujado de Líneas de Tendencia SVG en Fondo Claro
+  const renderSVGPath = (key, strokeColor, maxScale = 12000) => {
+    if (chartData.length < 2) return null;
+    const width = 500;
+    const height = 200;
+    const padding = 30;
+
+    const points = chartData.map((d, index) => {
+      const x = padding + (index / (chartData.length - 1)) * (width - padding * 2);
+      const val = d[key] || 0;
+      const y = height - padding - (val / maxScale) * (height - padding * 2);
+      return `${x},${y}`;
+    });
+
+    return (
+      <g>
+        <path
+          d={`M ${points.join(' L ')}`}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          className="transition-all duration-500 ease-in-out"
+        />
+        {chartData.map((d, index) => {
+          const x = padding + (index / (chartData.length - 1)) * (width - padding * 2);
+          const val = d[key] || 0;
+          const y = height - padding - (val / maxScale) * (height - padding * 2);
+          return (
+            <g key={index} className="group cursor-pointer">
+              <circle
+                cx={x}
+                cy={y}
+                r="5.5"
+                fill="#ffffff"
+                stroke={strokeColor}
+                strokeWidth="2.5"
+                className="hover:r-7 transition-all duration-150"
+              />
+              <title>{`${d.label}: ${val} mL`}</title>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased">
+      
+      {/* HEADER PRINCIPAL */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="bg-indigo-600 p-2.5 rounded-xl text-white shadow-md shadow-indigo-600/10">
+            <FlaskConical className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              Registro interno Laboratorio de Geoquímica
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">
+              Control Estequiométrico de Reactivos y Trazabilidad Analítica
+            </p>
+          </div>
+        </div>
+
+        {/* NAVEGACIÓN EN PESTAÑAS (FONDOS CLAROS) */}
+        <nav className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 ${
+              activeTab === 'dashboard'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            Planificador Dinámico
+          </button>
+          <button
+            onClick={() => setActiveTab('registro')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 ${
+              activeTab === 'registro'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ClipboardList className="w-4 h-4" />
+            Registrar Muestras
+          </button>
+          <button
+            onClick={() => setActiveTab('inventario')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 ${
+              activeTab === 'inventario'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            Inventario de Frascos ({inventario.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('ocupacion')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 ${
+              activeTab === 'ocupacion'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Ocupación de Laboratorio
+          </button>
+        </nav>
+      </header>
+
+      {/* NOTIFICACIÓN FLOTANTE */}
+      {notification && (
+        <div className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl transition-all duration-350 border ${
+          notification.type === 'success' 
+            ? 'bg-white border-emerald-200 text-emerald-800 shadow-emerald-100/40' 
+            : 'bg-white border-rose-200 text-rose-800 shadow-rose-100/40'
+        }`}>
+          <CheckCircle2 className={`w-5 h-5 flex-shrink-0 ${notification.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} />
+          <span className="text-sm font-semibold">{notification.text}</span>
+        </div>
+      )}
+
+      {/* ALERTAS ACTIVAS */}
+      {alertasReactivos.length > 0 && (
+        <div className="bg-slate-50 px-6 pt-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5 md:mt-0" />
+              <div>
+                <p className="text-sm font-bold text-amber-900">Advertencias de Seguridad y Stock</p>
+                <div className="text-xs text-amber-800 mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                  {alertasReactivos.map((al, idx) => (
+                    <span key={idx} className="flex items-center gap-1.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      {al.message}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ÁREA DE CONTENIDO */}
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 gap-6">
+
+        {/* PESTAÑA 1: DASHBOARD / PLANIFICADOR INTERACTIVO */}
+        {activeTab === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* PANEL DE SIMULACIÓN - IZQUIERDA */}
+            <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col gap-6 shadow-sm">
+              <div>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2">
+                    <Sliders className="w-5 h-5 text-indigo-500" />
+                    Simulador Estequiométrico
+                  </h2>
+                  <button 
+                    onClick={limpiarSimulador}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 border border-slate-200 px-2.5 py-1.5 rounded-xl hover:bg-slate-50 transition"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Limpiar
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  Modifica las cantidades de muestras comerciales y observa cómo se añaden automáticamente los blancos y duplicados de control analítico.
+                </p>
+              </div>
+
+              {/* CONTROLES DESLIZANTES PARA METODOLOGÍAS */}
+              <div className="flex flex-col gap-5">
+                {/* 1. METALES EN SUELO */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-slate-700">Metales Suelo (Minerales)</span>
+                    <span className="text-xs font-mono font-bold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg border border-indigo-100">
+                      {simMetalesSamples} M ({simMetalesQC} QC)
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="150" 
+                    value={simMetalesSamples} 
+                    onChange={(e) => setSimMetalesSamples(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                    <span>0 muestras</span>
+                    <span>Análisis Totales: {simMetalesTotal}</span>
+                  </div>
+                </div>
+
+                {/* 2. ORO Y PLATA */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-slate-700">Oro y Plata (Digestión Regia)</span>
+                    <span className="text-xs font-mono font-bold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-100">
+                      {simOroPlataSamples} M ({simOroPlataQC} QC)
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    value={simOroPlataSamples} 
+                    onChange={(e) => setSimOroPlataSamples(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                    <span>0 muestras</span>
+                    <span>Análisis Totales: {simOroPlataTotal}</span>
+                  </div>
+                </div>
+
+                {/* 3. AGUAS ACUOSAS */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-slate-700">Aguas Acuosas (Limpias)</span>
+                    <span className="text-xs font-mono font-bold bg-sky-50 text-sky-700 px-2.5 py-1 rounded-lg border border-sky-100">
+                      {simAguasAcuosasSamples} M ({simAguasAcuosasQC} QC)
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="200" 
+                    value={simAguasAcuosasSamples} 
+                    onChange={(e) => setSimAguasAcuosasSamples(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                    <span>0 muestras</span>
+                    <span>Análisis Totales: {simAguasAcuosasTotal}</span>
+                  </div>
+                </div>
+
+                {/* 4. AGUAS NO ACUOSAS */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-slate-700">Aguas No Acuosas</span>
+                    <span className="text-xs font-mono font-bold bg-teal-50 text-teal-700 px-2.5 py-1 rounded-lg border border-teal-100">
+                      {simAguasNoAcuosasSamples} M ({simAguasNoAcuosasQC} QC)
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="150" 
+                    value={simAguasNoAcuosasSamples} 
+                    onChange={(e) => setSimAguasNoAcuosasSamples(Number(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                  />
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                    <span>0 muestras</span>
+                    <span>Análisis Totales: {simAguasNoAcuosasTotal}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* BOTONES DE ESCENARIOS EXCLUSIVOS */}
+              <div className="flex flex-col gap-2.5 pt-4 border-t border-slate-200">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Escenarios de Consulta Rápida</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => aplicarPreset('metales')}
+                    className="text-xs font-bold bg-indigo-50/50 border border-indigo-100 p-2.5 rounded-xl text-indigo-700 hover:bg-indigo-50 transition"
+                  >
+                    Exclusivo Suelos
+                  </button>
+                  <button 
+                    onClick={() => aplicarPreset('oro_plata')}
+                    className="text-xs font-bold bg-amber-50/50 border border-amber-100 p-2.5 rounded-xl text-amber-850 hover:bg-amber-50 transition"
+                  >
+                    Exclusivo Oro/Plata
+                  </button>
+                  <button 
+                    onClick={() => aplicarPreset('aguas')}
+                    className="text-xs font-bold bg-teal-50/50 border border-teal-100 p-2.5 rounded-xl col-span-2 text-teal-850 hover:bg-teal-50 transition"
+                  >
+                    Autonomía Máxima Combinada para Aguas
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* IMPACTO EN TIEMPO REAL - DERECHA */}
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              
+              {/* IMPACTO EN VOLUMEN DE REACTIVOS */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2 mb-4">
+                  <TrendingDown className="w-5 h-5 text-rose-500" />
+                  Gasto Proyectado en Botellas de Bodega
+                </h2>
+                
+                <div className="flex flex-col gap-5">
+                  {/* BARRA HNO3 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1 text-xs font-bold text-slate-700">
+                      <span>Ácido Nítrico (HNO₃)</span>
+                      <span>
+                        Gasto: <span className="text-rose-600">-{consumoSimulado.hno3} mL</span> / {stockDisponible["Ácido Nitrico"]} mL disponibles
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-5 rounded-lg overflow-hidden flex border border-slate-200 p-0.5">
+                      <div 
+                        style={{ width: `${Math.min(100, (consumoSimulado.hno3 / stockDisponible["Ácido Nitrico"]) * 100)}%` }}
+                        className={`h-full rounded transition-all duration-300 ${consumoSimulado.hno3 > stockDisponible["Ácido Nitrico"] ? 'bg-rose-500' : 'bg-rose-400'}`}
+                      ></div>
+                      <div 
+                        style={{ width: `${Math.max(0, 100 - (consumoSimulado.hno3 / stockDisponible["Ácido Nitrico"]) * 100)}%` }}
+                        className="h-full bg-slate-100"
+                      ></div>
+                    </div>
+                    {consumoSimulado.hno3 > stockDisponible["Ácido Nitrico"] && (
+                      <p className="text-[10px] text-rose-600 mt-1 font-bold">⚠️ Sobregiro: Se requiere un stock extra de {consumoSimulado.hno3 - stockDisponible["Ácido Nitrico"]} mL de Ácido Nítrico.</p>
+                    )}
+                  </div>
+
+                  {/* BARRA HCL */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1 text-xs font-bold text-slate-700">
+                      <span>Ácido Clorhídrico (HCl)</span>
+                      <span>
+                        Gasto: <span className="text-indigo-600">-{consumoSimulado.hcl} mL</span> / {stockDisponible["Ácido clorhídrico"]} mL disponibles
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-5 rounded-lg overflow-hidden flex border border-slate-200 p-0.5">
+                      <div 
+                        style={{ width: `${Math.min(100, (consumoSimulado.hcl / stockDisponible["Ácido clorhídrico"]) * 100)}%` }}
+                        className={`h-full rounded transition-all duration-300 ${consumoSimulado.hcl > stockDisponible["Ácido clorhídrico"] ? 'bg-rose-500' : 'bg-indigo-400'}`}
+                      ></div>
+                      <div 
+                        style={{ width: `${Math.max(0, 100 - (consumoSimulado.hcl / stockDisponible["Ácido clorhídrico"]) * 100)}%` }}
+                        className="h-full bg-slate-100"
+                      ></div>
+                    </div>
+                    {consumoSimulado.hcl > stockDisponible["Ácido clorhídrico"] && (
+                      <p className="text-[10px] text-rose-600 mt-1 font-bold">⚠️ Sobregiro: Se requiere un stock extra de {consumoSimulado.hcl - stockDisponible["Ácido clorhídrico"]} mL de Ácido Clorhídrico.</p>
+                    )}
+                  </div>
+
+                  {/* BARRA H2O2 */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1 text-xs font-bold text-slate-700">
+                      <span>Peróxido de Hidrógeno 30% (H₂O₂)</span>
+                      <span>
+                        Gasto: <span className="text-amber-600">-{consumoSimulado.h2o2} mL</span> / {stockDisponible["Peróxido de hidrógeno 30%"]} mL disponibles
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-5 rounded-lg overflow-hidden flex border border-slate-200 p-0.5">
+                      <div 
+                        style={{ width: `${Math.min(100, (consumoSimulado.h2o2 / stockDisponible["Peróxido de hidrógeno 30%"]) * 100)}%` }}
+                        className={`h-full rounded transition-all duration-300 ${consumoSimulado.h2o2 > stockDisponible["Peróxido de hidrógeno 30%"] ? 'bg-rose-500' : 'bg-amber-400'}`}
+                      ></div>
+                      <div 
+                        style={{ width: `${Math.max(0, 100 - (consumoSimulado.h2o2 / stockDisponible["Peróxido de hidrógeno 30%"]) * 100)}%` }}
+                        className="h-full bg-slate-100"
+                      ></div>
+                    </div>
+                    {consumoSimulado.h2o2 > stockDisponible["Peróxido de hidrógeno 30%"] && (
+                      <p className="text-[10px] text-rose-600 mt-1 font-bold">⚠️ Sobregiro: Se requiere un stock extra de {consumoSimulado.h2o2 - stockDisponible["Peróxido de hidrógeno 30%"]} mL de Peróxido.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* AUTONOMÍA ADICIONAL COMBINADA PROYECTADA (Por Muestras) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* METALES SUELO CARD */}
+                <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">M. Suelo (Remanente)</span>
+                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-lg">Consiste en {autonomiaCombinadaRestante.metales.qc} QC</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-slate-900">
+                        {autonomiaCombinadaRestante.metales.muestras}
+                      </span>
+                      <span className="text-sm font-bold text-slate-500">muestras</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                    <div 
+                      className="bg-indigo-500 h-full rounded" 
+                      style={{ width: `${Math.min(100, (autonomiaCombinadaRestante.metales.muestras / Math.max(1, autonomiaExclusiva.metales.muestras)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* ORO Y PLATA CARD */}
+                <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Oro y Plata (Remanente)</span>
+                      <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-lg">Consiste en {autonomiaCombinadaRestante.oroPlata.qc} QC</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-slate-900">
+                        {autonomiaCombinadaRestante.oroPlata.muestras}
+                      </span>
+                      <span className="text-sm font-bold text-slate-500">muestras</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                    <div 
+                      className="bg-amber-500 h-full rounded" 
+                      style={{ width: `${Math.min(100, (autonomiaCombinadaRestante.oroPlata.muestras / Math.max(1, autonomiaExclusiva.oroPlata.muestras)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* AGUAS ACUOSAS CARD */}
+                <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguas Acuosas (Remanente)</span>
+                      <span className="text-[10px] font-bold text-sky-600 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-lg">Consiste en {autonomiaCombinadaRestante.aguasAcuosas.qc} QC</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-slate-900">
+                        {autonomiaCombinadaRestante.aguasAcuosas.muestras}
+                      </span>
+                      <span className="text-sm font-bold text-slate-500">muestras</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                    <div 
+                      className="bg-sky-500 h-full rounded" 
+                      style={{ width: `${Math.min(100, (autonomiaCombinadaRestante.aguasAcuosas.muestras / Math.max(1, autonomiaExclusiva.aguasAcuosas.muestras)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* AGUAS NO ACUOSAS CARD */}
+                <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguas No Acuosas (Remanente)</span>
+                      <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-lg">Consiste en {autonomiaCombinadaRestante.aguasNoAcuosas.qc} QC</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 mt-1">
+                      <span className="text-3xl font-extrabold text-slate-900">
+                        {autonomiaCombinadaRestante.aguasNoAcuosas.muestras}
+                      </span>
+                      <span className="text-sm font-bold text-slate-500">muestras</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                    <div 
+                      className="bg-teal-500 h-full rounded" 
+                      style={{ width: `${Math.min(100, (autonomiaCombinadaRestante.aguasNoAcuosas.muestras / Math.max(1, autonomiaExclusiva.aguasNoAcuosas.muestras)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* GRÁFICO HISTÓRICO DE CONSUMO */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+                  <div>
+                    <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                      <TrendingDown className="w-5 h-5 text-indigo-500" />
+                      Descenso del Volumen Físico Total
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Evolución volumétrica acumulada e histórica de tus ácidos y reactivos en base al registro analítico.
+                    </p>
+                  </div>
+                  <div className="flex gap-3 text-[11px] font-bold">
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>HNO₃</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>HCl</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-50"></span>H₂O₂</span>
+                  </div>
+                </div>
+
+                <div className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  {chartData.length < 2 ? (
+                    <div className="h-44 flex items-center justify-center text-xs text-slate-400 font-bold">
+                      Carga registros históricos adicionales para graficar la curva.
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <svg viewBox="0 0 500 200" width="100%" height="200" className="overflow-visible">
+                        {/* Líneas auxiliares de escala */}
+                        <line x1="30" y1="25" x2="470" y2="25" stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth="1" />
+                        <line x1="30" y1="85" x2="470" y2="85" stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth="1" />
+                        <line x1="30" y1="145" x2="470" y2="145" stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth="1" />
+                        <line x1="30" y1="170" x2="470" y2="170" stroke="#cbd5e1" strokeWidth="1" />
+
+                        {/* Etiquetas eje Y */}
+                        <text x="32" y="20" fill="#94a3b8" className="text-[8px] font-bold font-mono">10,000 mL</text>
+                        <text x="32" y="80" fill="#94a3b8" className="text-[8px] font-bold font-mono">5,000 mL</text>
+                        <text x="32" y="140" fill="#94a3b8" className="text-[8px] font-bold font-mono">1,500 mL</text>
+
+                        {/* Trazos de Líneas */}
+                        {renderSVGPath('hno3', '#f43f5e', 10000)}
+                        {renderSVGPath('hcl', '#0ea5e9', 10000)}
+                        {renderSVGPath('h2o2', '#f59e0b', 10000)}
+
+                        {/* Etiquetas eje X */}
+                        {chartData.map((d, index) => {
+                          const x = 30 + (index / (chartData.length - 1)) * (500 - 30 * 2);
+                          return (
+                            <text key={index} x={x} y="188" fill="#64748b" textAnchor="middle" className="text-[8px] font-bold font-mono">
+                              {d.label}
+                            </text>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* PESTAÑA 2: MÓDULO DE REGISTRO DE ANÁLISIS */}
+        {activeTab === 'registro' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* REGISTRAR CORRIDA */}
+            <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm h-fit">
+              <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-4">
+                <ClipboardList className="w-5 h-5 text-indigo-500" />
+                Nueva Corrida Analítica
+              </h2>
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+                Ingresa el lote de muestras procesado en el día. El sistema calculará y sumará automáticamente los QC necesarios según la escala, descontando el reactivo correspondiente.
+              </p>
+
+              <form onSubmit={handleRegistrarRun} className="flex flex-col gap-4">
+                
+                {/* SELECT FECHA */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Fecha de Corrida</label>
+                  <input
+                    type="date"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                    required
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition"
+                  />
+                </div>
+
+                {/* SELECT MÉTODO */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Método Analítico</label>
+                  <select
+                    value={formMethod}
+                    onChange={(e) => setFormMethod(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition"
+                  >
+                    {Object.keys(METODOS_DICCIONARIO).map(key => (
+                      <option key={key} value={key}>{METODOS_DICCIONARIO[key].name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* CANTIDAD MUESTRAS COMERCIALES */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Número de Muestras (Comerciales)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="300"
+                    value={formSamples}
+                    onChange={(e) => setFormSamples(Number(e.target.value))}
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold font-mono text-slate-850 outline-none focus:border-indigo-500 transition"
+                  />
+                  
+                  {/* CUADRO INFORMATIVO DE QC Y TOTAL */}
+                  <div className="bg-slate-100 p-3 rounded-xl border border-slate-200 mt-1 flex flex-col gap-1 text-[11px] font-semibold text-slate-600">
+                    <span className="flex justify-between">
+                      <span>Muestras Reales:</span>
+                      <span className="font-mono text-slate-900">{formSamples}</span>
+                    </span>
+                    <span className="flex justify-between border-b border-slate-200 pb-1">
+                      <span>Blancos y Duplicados (QC) requeridos:</span>
+                      <span className="font-mono text-indigo-600">+{calcularQCEscalonado(formSamples)}</span>
+                    </span>
+                    <span className="flex justify-between pt-1 font-bold text-slate-900 text-xs">
+                      <span>Total análisis a procesar:</span>
+                      <span className="font-mono text-indigo-600">{formSamples + calcularQCEscalonado(formSamples)}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* TOGGLE GASTO PERSONALIZADO */}
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-700">Ajuste Manual de Consumo</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isCustomConsumption}
+                        onChange={() => setIsCustomConsumption(!isCustomConsumption)}
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+
+                  {isCustomConsumption ? (
+                    <div className="flex flex-col gap-3 pt-2.5 border-t border-slate-200 mt-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-1">HNO₃ (mL)</label>
+                          <input 
+                            type="number"
+                            value={customHno3}
+                            onChange={(e) => setCustomHno3(e.target.value)}
+                            className="bg-white border border-slate-200 p-2 text-xs font-mono font-bold text-slate-800 rounded-lg w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-1">HCl (mL)</label>
+                          <input 
+                            type="number"
+                            value={customHcl}
+                            onChange={(e) => setCustomHcl(e.target.value)}
+                            className="bg-white border border-slate-200 p-2 text-xs font-mono font-bold text-slate-800 rounded-lg w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-1">H₂O₂ (mL)</label>
+                          <input 
+                            type="number"
+                            value={customH2o2}
+                            onChange={(e) => setCustomH2o2(e.target.value)}
+                            className="bg-white border border-slate-200 p-2 text-xs font-mono font-bold text-slate-800 rounded-lg w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500 leading-relaxed mt-1">
+                      El sistema multiplicará el número total de análisis por el gasto unitario de reactivo puro.
+                    </p>
+                  )}
+                </div>
+
+                {/* NOTAS */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Comentarios u Orden de Trabajo</label>
+                  <textarea
+                    placeholder="Ej. Orden GEO-2401, Repetición por contaminación"
+                    value={formNotes}
+                    onChange={(e) => setFormNotes(e.target.value)}
+                    rows="2"
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-indigo-500 transition resize-none"
+                  />
+                </div>
+
+                {/* BOTÓN REGISTRAR */}
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 font-bold text-white p-3.5 rounded-xl shadow-md shadow-indigo-600/10 flex items-center justify-center gap-2 mt-2 transition text-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  Registrar Análisis y Descontar Frascos
+                </button>
+              </form>
+            </div>
+
+            {/* TABLA HISTÓRICA */}
+            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-indigo-500" />
+                  Historial de Consumo Analítico
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Listado cronológico de corridas analíticas procesadas. Si eliminas un registro, los volúmenes correspondientes volverán automáticamente a las botellas de bodega.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-500 font-bold">
+                      <th className="p-3.5">Fecha</th>
+                      <th className="p-3.5">Método / Orden</th>
+                      <th className="p-3.5">Análisis (Muestras/QC)</th>
+                      <th className="p-3.5 text-rose-600">Gasto HNO₃</th>
+                      <th className="p-3.5 text-sky-600">Gasto HCl</th>
+                      <th className="p-3.5 text-amber-600">Gasto H₂O₂</th>
+                      <th className="p-3.5 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-150 text-slate-700 font-semibold bg-white">
+                    {history.map(log => (
+                      <tr key={log.id} className="hover:bg-slate-50 transition">
+                        <td className="p-3.5 font-mono text-slate-500 text-[11px]">{log.date}</td>
+                        <td className="p-3.5">
+                          <span className="block font-bold text-slate-900">{METODOS_DICCIONARIO[log.method]?.name || log.method}</span>
+                          <span className="text-[10px] text-slate-400 font-medium block max-w-[170px] truncate">{log.notes}</span>
+                        </td>
+                        <td className="p-3.5">
+                          <span className="font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                            {log.totalTests} total ({log.samples}M / {log.qc}QC)
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-mono text-rose-600">{log.hno3} mL</td>
+                        <td className="p-3.5 font-mono text-sky-600">{log.hcl} mL</td>
+                        <td className="p-3.5 font-mono text-amber-600">{log.h2o2 > 0 ? `${log.h2o2} mL` : '-'}</td>
+                        <td className="p-3.5 text-center">
+                          <button
+                            onClick={() => handleDeleteLog(log)}
+                            className="p-1.5 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition"
+                            title="Eliminar y reponer stock"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {history.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="text-center p-8 text-slate-400 font-bold">
+                          Sin registros de consumo cargados.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* PESTAÑA 3: INVENTARIO DETALLADO DE BOTELLAS */}
+        {activeTab === 'inventario' && (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            {/* NUEVA BOTELLA */}
+            <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm h-fit">
+              <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-4">
+                <Plus className="w-5 h-5 text-indigo-500" />
+                Ingreso de Frascos
+              </h2>
+              <form onSubmit={handleAddNewReagent} className="flex flex-col gap-4">
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Nombre de Reactivo</label>
+                  <select 
+                    value={newReagentName}
+                    onChange={(e) => setNewReagentName(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none"
+                  >
+                    <option value="Ácido Nitrico">Ácido Nítrico</option>
+                    <option value="Ácido clorhídrico">Ácido Clorhídrico</option>
+                    <option value="Peróxido de hidrógeno 30%">Peróxido de Hidrógeno 30%</option>
+                    <option value="Ácido Fluorhídrico">Ácido Fluorhídrico</option>
+                    <option value="Estándar Oro">Estándar Oro</option>
+                    <option value="Estándar Plata">Estándar Plata</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Código Interno</label>
+                  <input 
+                    type="text" 
+                    value={newReagentCode}
+                    onChange={(e) => setNewReagentCode(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold font-mono text-slate-800"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Número de Lote</label>
+                  <input 
+                    type="text" 
+                    placeholder="Obligatorio"
+                    value={newReagentLot}
+                    onChange={(e) => setNewReagentLot(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold font-mono text-slate-800"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-500">Volumen (mL/g)</label>
+                    <input 
+                      type="number" 
+                      value={newReagentVol}
+                      onChange={(e) => setNewReagentVol(Number(e.target.value))}
+                      className="bg-slate-50 border border-slate-200 p-2 text-xs font-bold text-slate-800"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-slate-500">Cantidad Frascos</label>
+                    <input 
+                      type="number" 
+                      value={newReagentQty}
+                      onChange={(e) => setNewReagentQty(Number(e.target.value))}
+                      className="bg-slate-50 border border-slate-200 p-2 text-xs font-bold text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Fecha de Vencimiento</label>
+                  <input 
+                    type="date" 
+                    value={newReagentExpiry}
+                    onChange={(e) => setNewReagentExpiry(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold font-mono text-slate-800"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 font-bold text-white text-xs p-3 rounded-xl mt-2 flex items-center justify-center gap-2 transition shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Agregar al Inventario
+                </button>
+              </form>
+            </div>
+
+            {/* GRILLA DE REACTIVOS */}
+            <div className="lg:col-span-3 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Database className="w-5 h-5 text-indigo-500" />
+                  Bodega Física de Reactivos y Estándares
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Mapeo detallado de botellas basado en tu planilla original de Excel. Deshabilitar o expirar botellas aquí las excluirá automáticamente de la suma de stock en el planificador.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 max-h-[500px] overflow-y-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-500 font-bold sticky top-0 z-10">
+                      <th className="p-3.5">Código</th>
+                      <th className="p-3.5">Reactivo</th>
+                      <th className="p-3.5">Fabricante / Lote</th>
+                      <th className="p-3.5">Vencimiento</th>
+                      <th className="p-3.5">Capacidad Inicial</th>
+                      <th className="p-3.5">Volumen Actual</th>
+                      <th className="p-3.5">Estado Operativo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-150 text-slate-700 font-semibold bg-white">
+                    {inventario.map(item => (
+                      <tr key={item.id} className={`hover:bg-slate-50 transition ${item.state === 'Vencido' ? 'bg-rose-50/30' : ''}`}>
+                        <td className="p-3.5 font-mono font-bold text-slate-900">{item.code}</td>
+                        <td className="p-3.5 text-slate-900 font-bold">{item.name}</td>
+                        <td className="p-3.5 text-slate-600">
+                          <span className="block">{item.brand}</span>
+                          <span className="text-[10px] text-slate-400 block font-mono font-bold">Lote: {item.lot}</span>
+                        </td>
+                        <td className="p-3.5 font-mono">
+                          <span className={`${item.state === 'Vencido' ? 'text-rose-600 font-bold' : 'text-slate-600'}`}>
+                            {item.expiry}
+                          </span>
+                        </td>
+                        <td className="p-3.5 font-mono text-slate-400">
+                          {item.unitVol} mL {item.quantity > 1 ? `(x${item.quantity})` : ''}
+                        </td>
+                        <td className="p-3.5 font-mono text-slate-900 font-bold">
+                          {item.currentVol} mL
+                        </td>
+                        <td className="p-3.5">
+                          <select
+                            value={item.state}
+                            onChange={(e) => toggleReagentState(item.id, e.target.value)}
+                            className={`p-1.5 rounded-lg text-[11px] font-bold outline-none border transition ${
+                              item.state === 'Vigente' 
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                : item.state === 'Vencido' 
+                                ? 'bg-rose-50 border-rose-200 text-rose-700' 
+                                : 'bg-slate-100 border-slate-200 text-slate-500'
+                            }`}
+                          >
+                            <option value="Vigente">Vigente</option>
+                            <option value="Vencido">Vencido</option>
+                            <option value="Agotado">Agotado</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* PESTAÑA 4: OCUPACIÓN DE LABORATORIO */}
+        {activeTab === 'ocupacion' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            
+            {/* Tarjetas de Resumen (KPIs) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-blue-500">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Total Horas Semanales</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">{ocTotalHoras}</h3>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Cursos Registrados</p>
+                            <h3 className="text-3xl font-extrabold text-slate-900">{ocCursosUnicos}</h3>
+                        </div>
+                        <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                            <BookOpen className="w-6 h-6" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">Curso de Mayor Demanda</p>
+                            <h3 className="text-xl font-extrabold text-slate-900 mt-1 line-clamp-1">{ocCursoTop.nombre}</h3>
+                            <span className="text-amber-600 font-bold text-xs block mt-1">{ocCursoTop.horas > 0 ? `${ocCursoTop.horas} hrs en total` : '0 hrs'}</span>
+                        </div>
+                        <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                            <Flame className="w-6 h-6" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Gráfico de Barras */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm lg:col-span-2 border border-slate-200">
+                    <h3 className="font-extrabold text-base text-slate-900 mb-4">Horas Totales por Curso</h3>
+                    <div className="relative h-72 w-full">
+                        <canvas id="chartCursos"></canvas>
+                    </div>
+                </div>
+
+                {/* Gráfico de Pastel */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 className="font-extrabold text-base text-slate-900 mb-4">Distribución por Docente</h3>
+                    <div className="relative h-56 w-full flex justify-center">
+                        <canvas id="chartDocentes"></canvas>
+                    </div>
+                    <div className="mt-6 grid grid-cols-1 gap-2 text-xs font-bold text-slate-600">
+                        {Object.keys(horasPorDocente).map(docente => {
+                            const partes = docente.split(' ');
+                            const nombreCorto = partes.length > 2 ? `${partes[0]} ${partes[partes.length - 2]} ${partes[partes.length - 1]}` : docente;
+                            return (
+                                <div key={docente} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                                    <div className="flex items-center gap-2 truncate">
+                                        <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORES_DOCENTES[docente] }}></span>
+                                        <span className="truncate text-slate-700" title={docente}>{nombreCorto}</span>
+                                    </div>
+                                    <span className="text-slate-900">{horasPorDocente[docente]}h</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+                    <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-indigo-500" />
+                        Registros de Ingreso al Laboratorio
+                    </h3>
+                    <button onClick={() => setIsOcupacionModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm text-xs">
+                        <PlusCircle className="w-4 h-4" />
+                        Nuevo Registro
+                    </button>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-100 text-slate-500 text-xs font-bold border-b border-slate-200">
+                                <th className="py-4 px-6">Curso</th>
+                                <th className="py-4 px-6">Docente</th>
+                                <th className="py-4 px-6">Fecha</th>
+                                <th className="py-4 px-6 text-center">Horas</th>
+                                <th className="py-4 px-6 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-xs font-semibold text-slate-700 divide-y divide-slate-100">
+                            {registrosLaboratorio.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="p-12 text-center text-slate-500 font-bold">
+                                        <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                        <p>No hay registros actuales. Haz clic en "Nuevo Registro" para empezar.</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                registrosLaboratorio.map(item => {
+                                    const partesNombre = item.docente.split(' ');
+                                    const apellido = partesNombre.length > 2 ? partesNombre[partesNombre.length - 2] : partesNombre[1];
+                                    const inicial = apellido ? apellido.charAt(0) : item.docente.charAt(0);
+                                    let fechaForm = item.fecha;
+                                    if(fechaForm.includes('-')) {
+                                        const [y, m, d] = fechaForm.split('-');
+                                        fechaForm = `${d}/${m}/${y}`;
+                                    }
+
+                                    return (
+                                        <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="py-3 px-6 text-slate-900 border-l-4" style={{ borderLeftColor: COLORES_CURSOS[item.curso]?.border || '#cbd5e1' }}>{item.curso}</td>
+                                            <td className="py-3 px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${COLORES_DOCENTES[item.docente]}20`, color: COLORES_DOCENTES[item.docente] }}>
+                                                        {inicial}
+                                                    </div>
+                                                    <span className="text-slate-800">{item.docente}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-6 text-slate-500">
+                                                <div className="flex items-center gap-1.5 font-mono">
+                                                    <Calendar className="w-4 h-4" />
+                                                    {fechaForm}
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-6 text-center">
+                                                <span className="bg-slate-100 px-3 py-1.5 rounded-lg text-slate-900 font-mono">{item.horas} h</span>
+                                            </td>
+                                            <td className="py-3 px-6 text-center">
+                                                <button onClick={() => handleEliminarOcupacion(item.id)} className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Eliminar registro">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Modal de Registro Ocupación */}
+            {isOcupacionModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-extrabold text-slate-900">Agregar Ingreso</h3>
+                            <button onClick={() => setIsOcupacionModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 p-2 rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleRegistrarOcupacion} className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">Docente a cargo</label>
+                                <select required value={ocDocente} onChange={e => setOcDocente(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition">
+                                    <option value="" disabled>Seleccione un docente</option>
+                                    <option value="Dr. Wilder Chuquiruna">Dr. Wilder Chuquiruna</option>
+                                    <option value="M.Sc. Sandra Medina Paredes">M.Sc. Sandra Medina Paredes</option>
+                                    <option value="M.Sc. Paul Aguilar">M.Sc. Paul Aguilar</option>
+                                    <option value="M.Sc. Zoraida Remires">M.Sc. Zoraida Remires</option>
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">Curso / Materia</label>
+                                <select required value={ocCurso} onChange={e => setOcCurso(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition">
+                                    <option value="" disabled>Seleccione un curso</option>
+                                    <option value="Geo metalurgia">Geo metalurgia</option>
+                                    <option value="Aguas Superficiales">Aguas Superficiales</option>
+                                    <option value="No Metálicos">No Metálicos</option>
+                                    <option value="Sedimentos">Sedimentos</option>
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">Fecha del ingreso</label>
+                                <input type="date" required value={ocFecha} onChange={e => setOcFecha(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition" />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">Horas de uso continuo</label>
+                                <input type="number" required min="1" max="24" value={ocHoras} onChange={e => setOcHoras(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold font-mono text-slate-800 outline-none focus:border-indigo-500 transition" />
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsOcupacionModalOpen(false)} className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
+                                    Guardar Registro
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+          </div>
+        )}
+
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-white border-t border-slate-200 p-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
+        <div>
+          <span>© 2026 TraceLabs Inc. Licencia Química Certificada.</span>
+        </div>
+        <div className="flex gap-4 font-bold">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conectado a Core</span>
+          <span className="flex items-center gap-1 text-indigo-600"><Sparkles className="w-3.5 h-3.5" /> Antigravity Compliant</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+        // Renderizado de la aplicación en el DOM
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espectrometría AA240 - LabGeoquímica</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tabla-periodica.css">
+</head>
+<body>
+    <nav class="navbar" style="position: relative; background: var(--bg-white); border-bottom: 1px solid #eaeaea;">
+        <div class="container">
+            <a href="index.html" class="logo"><i class="fas fa-atom"></i> LabGeoquímica</a>
+            <a href="index.html" class="btn btn-primary" style="padding: 8px 20px; border-radius: 4px;">Volver al Inicio</a>
+        </div>
+    </nav>
+    <section class="section-padding">
+        <div class="container" style="max-width: 900px;">
+            <h1 class="section-title" style="font-size: 2.2rem; margin-bottom: 2rem; text-align: left;">Espectrometría de Absorción Atómica (Agilent AA240)</h1>
+            <img src="aa240.jpg" alt="Agilent AA240" style="width:100%; height:450px; object-fit:cover; border-radius:8px; margin-bottom: 3rem; box-shadow: var(--shadow-sm);">
+            
+            <div style="background: var(--bg-light); padding: 2.5rem; border-radius: 8px; border-left: 5px solid var(--accent-color);">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.5rem;">Descripción del Método Analítico</h3>
+                <p>La Espectrometría de Absorción Atómica (AAS) es un método robusto y de comprobada eficacia para cuantificar metales a niveles de traza y ultra traza en diversas matrices geológicas y ambientales.</p>
+                <br>
+                <p><strong>Aplicaciones comunes:</strong> Análisis de oro, plata y metales base en muestras minerales, así como control de calidad en aguas. El sistema Agilent AA240 ofrece una óptica rápida e instrumentación confiable que minimiza las interferencias químicas.</p>
+                <br>
+                <p><em>(Aquí puedes agregar la información técnica detallada: digestión ácida, tipos de flama, límites de detección, normativas, etc.)</em></p>
+            </div>
+            
+            <h2 class="section-title" style="margin-top: 4rem; font-size: 1.8rem;">Capacidad Analítica (Elementos)</h2>
+            <div id="periodic-table" data-equipo="aa240" class="pt-container"></div>
+            
+        </div>
+    </section>
+    <script src="tabla-periodica.js"></script>
+</body>
+</html>

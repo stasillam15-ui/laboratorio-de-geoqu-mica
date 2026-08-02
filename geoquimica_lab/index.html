@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Geoquímica</title>
+    <meta name="description" content="Laboratorio de Geoquímica: caracterización fisicoquímica y cuantificación elemental en matrices de agua y suelo.">
+    <!-- Fuentes de Google: Inter (Estilo limpio, científico y moderno) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos de FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="#" class="logo"><i class="fas fa-atom"></i> LabGeoquímica</a>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#servicios">Servicios y Equipamiento</a></li>
+                <li><a href="#investigacion">Líneas de Investigación</a></li>
+                <li><a href="#epp">Visitas y Prácticas</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="#" id="loginBtn" style="color: var(--primary-color); font-weight: 700;"><i class="fas fa-user-circle"></i> Iniciar Sesión</a></li>
+            </ul>
+            <div class="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección 1: Hero (Inicio) -->
+    <header id="inicio" class="hero">
+        <!-- SUGERENCIA DE FOTO: En el CSS (.hero) puedes reemplazar el gradiente de fondo por una fotografía panorámica del laboratorio -->
+        <div class="container hero-content">
+            <h1 class="reveal">Laboratorio de Geoquímica</h1>
+            <p class="reveal">El Laboratorio de Geoquímica cuenta con una robusta infraestructura tecnológica dedicada a la caracterización fisicoquímica y cuantificación elemental en matrices de agua y suelo. Apoyados en instrumentación espectrométrica de vanguardia —destacando la emisión atómica por plasma de microondas (MP-AES) y la espectrometría de absorción atómica (AAS)— junto con sistemas electrométricos multiparamétricos, garantizamos una alta precisión analítica. Nuestra capacidad integral abarca desde la determinación de metales traza y macronutrientes, hasta evaluaciones físicas fundamentales de suelos, encontrándonos en constante expansión metodológica para responder a las exigencias agronómicas y ambientales actuales.</p>
+            <a href="#servicios" class="btn btn-primary reveal">Conocer Nuestros Servicios</a>
+        </div>
+    </header>
+
+    <!-- Sección 2: Servicios Analíticos y Equipamiento -->
+    <section id="servicios" class="servicios section-padding bg-light">
+        <div class="container">
+            <h2 class="section-title reveal">Servicios Analíticos y Equipamiento</h2>
+            <div class="grid cards-grid">
+                
+                <!-- A. Agilent MP-AES 4210 -->
+                <a href="detalle-mp-aes.html" target="_blank" class="card reveal" style="text-decoration: none; color: inherit;">
+                    <div class="card-img" style="background-image: url('mp-aes.jpg');"></div>
+                    <div class="card-content">
+                        <h3>Espectrometría de Emisión Atómica por Plasma de Microondas</h3>
+                        <p class="subtitle">Agilent MP-AES 4210</p>
+                        <div class="card-details">
+                            <p><strong>Matrices analizadas:</strong> Minerales y Aguas.</p>
+                            <p><strong>Parámetros:</strong> Molibdeno, Níquel, Selenio, Estroncio, Potasio, Manganeso, Cadmio, Zinc, Plomo, Bario, Cobalto, Cobre, Hierro, Aluminio, Calcio, Cromo, Arsénico.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- B. Agilent AA240 -->
+                <a href="detalle-aa240.html" target="_blank" class="card reveal" style="text-decoration: none; color: inherit;">
+                    <div class="card-img" style="background-image: url('aa240.jpg');"></div>
+                    <div class="card-content">
+                        <h3>Espectrometría de Absorción Atómica</h3>
+                        <p class="subtitle">Agilent AA240</p>
+                        <div class="card-details mt-2">
+                            <p><strong>Matrices analizadas:</strong> Minerales y Aguas.</p>
+                            <p><strong>Parámetros:</strong> Potasio, Zinc, Cobre, Calcio, Oro, Plata.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- C. Hanna HI9829 -->
+                <a href="detalle-electrometricos.html" target="_blank" class="card reveal" style="text-decoration: none; color: inherit;">
+                    <div class="card-img" style="background-image: url('electroquimicos.jpg');"></div>
+                    <div class="card-content">
+                        <h3>Análisis Electrométricos Multiparamétricos</h3>
+                        <p class="subtitle">Hanna HI9829</p>
+                        <div class="card-details mt-2">
+                            <p><strong>Matrices analizadas:</strong> Minerales y Aguas.</p>
+                            <p><strong>Parámetros:</strong> Conductividad eléctrica, pH, Oxígeno disuelto.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- D. Análisis Físicos de Suelos -->
+                <a href="detalle-suelos.html" target="_blank" class="card reveal" style="text-decoration: none; color: inherit;">
+                    <div class="card-img" style="background-image: url('granulometria.jpg');"></div>
+                    <div class="card-content">
+                        <h3>Análisis Físicos de Suelos</h3>
+                        <div class="card-details mt-2">
+                            <p><strong>Parámetros:</strong> Densidad de suelos, Textura, Granulometría.</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- E. Próximamente -->
+            <a href="detalle-carbonatos.html" target="_blank" class="upcoming-services reveal mt-5" style="text-decoration: none; color: inherit;">
+                <div class="upcoming-img" style="background-image: url('carbonatos.jpg');"></div>
+                <div class="upcoming-content">
+                    <div class="upcoming-header">
+                        <i class="fas fa-rocket"></i>
+                        <h3>Próximamente</h3>
+                        <p>Nuevas metodologías en desarrollo</p>
+                    </div>
+                    <ul class="upcoming-list">
+                        <li><i class="fas fa-check-circle"></i> Acidez y alcalinidad de aguas.</li>
+                        <li><i class="fas fa-check-circle"></i> Determinación de carbonatos de calcio.</li>
+                    </ul>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Sección 3: Líneas de Investigación -->
+    <section id="investigacion" class="investigacion section-padding">
+        <div class="container">
+            <h2 class="section-title reveal">Líneas de Investigación</h2>
+            <div class="grid research-grid">
+                
+                <div class="research-item reveal">
+                    <div class="icon-box"><i class="fas fa-leaf"></i></div>
+                    <h4>1. Geoquímica Ambiental y Remediación de Pasivos</h4>
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <img src="linea1.jpg" alt="Geoquímica Ambiental" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; background: #f8f9fa; border: 1px dashed #cbd5e1;">
+                    </div>
+                </div>
+
+                <div class="research-item reveal">
+                    <div class="icon-box"><i class="fas fa-mountain"></i></div>
+                    <h4>2. Agrogeología y Meteorización de Minerales</h4>
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <img src="linea2.jpg" alt="Agrogeología" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; background: #f8f9fa; border: 1px dashed #cbd5e1;">
+                    </div>
+                </div>
+
+                <div class="research-item reveal">
+                    <div class="icon-box"><i class="fas fa-water"></i></div>
+                    <h4>3. Hidrometalurgia, Biometalurgia y Metalurgia Extractiva</h4>
+                    <div style="margin-top: 1.5rem; text-align: center;">
+                        <img src="linea3.jpg" alt="Hidrometalurgia y Biometalurgia" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; background: #f8f9fa; border: 1px dashed #cbd5e1;">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección EPP: Visitas y Prácticas -->
+    <section id="epp" class="section-padding">
+        <div class="container">
+            <h2 class="section-title reveal">Visitas y Prácticas</h2>
+            <div class="reveal" style="background: var(--bg-white); padding: 2.5rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 5px solid var(--accent-color);">
+                <p style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-color);">La seguridad es nuestra máxima prioridad. Para acceder a las instalaciones del Laboratorio de Geoquímica, todas las visitas deben portar obligatoriamente el siguiente Equipo de Protección Personal (EPP):</p>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
+                        <i class="fas fa-user-md" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <span><strong>Bata de laboratorio</strong> (manga larga y abotonada)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
+                        <i class="fas fa-glasses" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <span><strong>Lentes de seguridad</strong> (protección lateral)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
+                        <i class="fas fa-shoe-prints" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <span><strong>Calzado cerrado</strong> (zapatos o botas)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
+                        <i class="fas fa-hands-wash" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <span><strong>Guantes de nitrilo</strong> (proporcionados en el lab)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección 4: Contacto -->
+    <section id="contacto" class="contacto section-padding bg-light">
+        <div class="container">
+            <h2 class="section-title reveal">Contacto</h2>
+            <div class="contact-wrapper">
+                
+                <div class="contact-info reveal">
+                    <h3>Información del Laboratorio</h3>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p><strong>Dirección:</strong> Av. Atahualpa 1050, Ciudad Universitaria</p>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <p><strong>Teléfono:</strong> 976473952</p>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <p><strong>Correo:</strong> jhoeltasillamoreno@gmail.com</p>
+                    </div>
+
+                    <!-- Integración con Google Maps -->
+                    <div class="mt-3" style="width: 100%; height: 250px;">
+                        <iframe 
+                            src="https://maps.google.com/maps?q=Av.%20Atahualpa%201050,%20Ciudad%20Universitaria&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" 
+                            allowfullscreen="" 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+
+                <div class="contact-form-container reveal">
+                    <h3>Envíanos un mensaje</h3>
+                    <form id="contactForm" class="contact-form" action="https://formsubmit.co/stasillam15@unc.edu.pe" method="POST">
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_template" value="table">
+                        <div class="form-group">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre completo">
+                        </div>
+                        <div class="form-group">
+                            <label for="correo">Correo Electrónico</label>
+                            <input type="email" id="correo" name="correo" required placeholder="tu@correo.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="asunto">Asunto</label>
+                            <input type="text" id="asunto" name="asunto" required placeholder="Asunto de tu mensaje">
+                        </div>
+                        <div class="form-group">
+                            <label for="mensaje">Mensaje</label>
+                            <textarea id="mensaje" name="mensaje" rows="5" required placeholder="Escribe tu mensaje aquí..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Enviar Mensaje</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Laboratorio de Geoquímica. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="color: var(--primary-color); margin-bottom: 1.5rem; text-align: center;"><i class="fas fa-lock"></i> Acceso al Dashboard</h2>
+            <form id="loginForm">
+                <div style="margin-bottom: 1rem;">
+                    <label for="userId" style="display:block; margin-bottom: 0.5rem; font-weight: 600;">Nombre o ID de Usuario</label>
+                    <input type="text" id="userId" placeholder="Ingresa tu usuario" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="userPassword" style="display:block; margin-bottom: 0.5rem; font-weight: 600;">Contraseña</label>
+                    <input type="password" id="userPassword" placeholder="Tu contraseña" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div id="loginError" style="color: red; font-size: 0.9rem; margin-bottom: 1rem; display: none; text-align: center;">Credenciales incorrectas.</div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
