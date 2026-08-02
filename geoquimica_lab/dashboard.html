@@ -167,7 +167,8 @@ const COLORES_DOCENTES = {
     "M.Sc. Sandra Medina Paredes": "rgba(16, 185, 129, 1)",
     "M.Sc. Paul Aguilar": "rgba(245, 158, 11, 1)",
     "M.Sc. Zoraida Remires": "rgba(139, 92, 246, 1)",
-    "M.Sc. Wilver Morales Cespedes": "rgba(236, 72, 153, 1)"
+    "M.Sc. Wilver Morales Cespedes": "rgba(236, 72, 153, 1)",
+    "Dr. Crispin zenon quispe mamani": "rgba(20, 184, 166, 1)"
 };
 
 function App() {
@@ -219,6 +220,12 @@ function App() {
   const [customH2o2, setCustomH2o2] = useState(0);
   const [formNotes, setFormNotes] = useState("");
   const [notification, setNotification] = useState(null);
+
+  // Formulario Preparación de Soluciones
+  const [registroGastoModo, setRegistroGastoModo] = useState('corrida');
+  const [solFecha, setSolFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [solReactivo, setSolReactivo] = useState("");
+  const [solVolumen, setSolVolumen] = useState(100);
 
   // Formulario de ingreso de nuevo reactivo al inventario
   const [newReagentName, setNewReagentName] = useState("Ácido Nitrico");
@@ -482,6 +489,63 @@ function App() {
     setCustomH2o2(0);
 
     triggerNotification("🚀 Corrida de análisis registrada. El stock de frascos y las gráficas se actualizaron.", "success");
+  };
+
+  // REGISTRO DE PREPARACIÓN DE SOLUCIONES
+  const handleRegistrarSolucion = (e) => {
+    e.preventDefault();
+    if (!solReactivo) {
+      triggerNotification("⚠️ Por favor selecciona un reactivo.", "error");
+      return;
+    }
+
+    const volNum = Number(solVolumen);
+    if (volNum <= 0) {
+      triggerNotification("⚠️ El volumen debe ser mayor a 0.", "error");
+      return;
+    }
+
+    if (volNum > (stockDisponible[solReactivo] || 0)) {
+      triggerNotification(`⚠️ No hay suficiente stock de ${solReactivo} para esta preparación.`, "error");
+      return;
+    }
+
+    // Descontar del inventario físico (FIFO)
+    setInventario(prevInv => {
+      let remVol = volNum;
+      return prevInv.map(item => {
+        if (item.state !== "Vigente" || item.name !== solReactivo) return item;
+        let updateCurrent = item.currentVol;
+        if (remVol > 0) {
+          if (updateCurrent >= remVol) {
+            updateCurrent -= remVol;
+            remVol = 0;
+          } else {
+            remVol -= updateCurrent;
+            updateCurrent = 0;
+          }
+        }
+        return { ...item, currentVol: updateCurrent };
+      });
+    });
+
+    // Añadir al historial
+    const nuevoRegistro = {
+      id: Date.now(),
+      date: solFecha,
+      method: "Preparación de Solución",
+      samples: "-",
+      qc: "-",
+      totalTests: "-",
+      hno3: solReactivo === "Ácido Nitrico" ? volNum : 0,
+      hcl: solReactivo === "Ácido clorhídrico" ? volNum : 0,
+      h2o2: solReactivo === "Peróxido de hidrógeno 30%" ? volNum : 0,
+      notes: `Preparación de solución de ${solReactivo} (${volNum} mL/g)`
+    };
+
+    setHistory(prev => [nuevoRegistro, ...prev]);
+    setSolVolumen(100);
+    triggerNotification("🧪 Gasto por preparación de solución registrado con éxito.", "success");
   };
 
   // AGREGAR NUEVO FRASCO AL INVENTARIO
@@ -844,7 +908,7 @@ function App() {
             }`}
           >
             <ClipboardList className="w-4 h-4" />
-            Registrar Muestras
+            Registro de gasto de reactivos
           </button>
           <button
             onClick={() => setActiveTab('inventario')}
@@ -1291,13 +1355,30 @@ function App() {
             
             {/* REGISTRAR CORRIDA */}
             <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm h-fit">
-              <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-4">
-                <ClipboardList className="w-5 h-5 text-indigo-500" />
-                Nueva Corrida Analítica
-              </h2>
-              <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-                Ingresa el lote de muestras procesado en el día. El sistema calculará y sumará automáticamente los QC necesarios según la escala, descontando el reactivo correspondiente.
-              </p>
+              <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                <button
+                  onClick={() => setRegistroGastoModo('corrida')}
+                  className={`flex-1 text-[11px] font-bold py-2.5 rounded-lg transition-all ${registroGastoModo === 'corrida' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Corrida Analítica
+                </button>
+                <button
+                  onClick={() => setRegistroGastoModo('solucion')}
+                  className={`flex-1 text-[11px] font-bold py-2.5 rounded-lg transition-all ${registroGastoModo === 'solucion' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Prep. de Soluciones
+                </button>
+              </div>
+
+              {registroGastoModo === 'corrida' ? (
+                <>
+                  <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-4">
+                    <ClipboardList className="w-5 h-5 text-indigo-500" />
+                    Nueva Corrida Analítica
+                  </h2>
+                  <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+                    Ingresa el lote de muestras procesado en el día. El sistema calculará y sumará automáticamente los QC necesarios según la escala, descontando el reactivo correspondiente.
+                  </p>
 
               <form onSubmit={handleRegistrarRun} className="flex flex-col gap-4">
                 
@@ -1431,6 +1512,40 @@ function App() {
                   Registrar Análisis y Descontar Frascos
                 </button>
               </form>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-base font-extrabold text-slate-950 flex items-center gap-2 mb-4">
+                    <Beaker className="w-5 h-5 text-indigo-500" />
+                    Gasto por Preparación
+                  </h2>
+                  <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+                    Registra el reactivo y volumen utilizado directamente en la preparación de soluciones o estándares.
+                  </p>
+                  <form onSubmit={handleRegistrarSolucion} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700">Fecha</label>
+                      <input type="date" value={solFecha} onChange={(e) => setSolFecha(e.target.value)} required className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700">Reactivo</label>
+                      <select value={solReactivo} onChange={(e) => setSolReactivo(e.target.value)} required className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition">
+                        <option value="" disabled>Seleccione un reactivo</option>
+                        {Array.from(new Set(inventario.map(i => i.name))).map(name => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-700">Volumen o Masa (mL / g)</label>
+                      <input type="number" min="0.1" step="0.1" value={solVolumen} onChange={(e) => setSolVolumen(e.target.value)} required className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold font-mono text-slate-850 outline-none focus:border-indigo-500 transition" />
+                    </div>
+                    <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs p-3.5 rounded-xl shadow-md shadow-indigo-600/10 transition-colors flex items-center justify-center gap-2 mt-2 w-full">
+                      <Plus className="w-4 h-4" /> Registrar Gasto
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
 
             {/* TABLA HISTÓRICA */}
@@ -1836,6 +1951,7 @@ function App() {
                                     <option value="M.Sc. Paul Aguilar">M.Sc. Paul Aguilar</option>
                                     <option value="M.Sc. Zoraida Remires">M.Sc. Zoraida Remires</option>
                                     <option value="M.Sc. Wilver Morales Cespedes">M.Sc. Wilver Morales Cespedes</option>
+                                    <option value="Dr. Crispin zenon quispe mamani">Dr. Crispin zenon quispe mamani</option>
                                 </select>
                             </div>
 
