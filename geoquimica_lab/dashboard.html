@@ -168,12 +168,18 @@ function App() {
   
   // Estado real de volumen en las botellas (físico disminuye con registros reales)
   const [inventario, setInventario] = useState(() => {
+    const saved = localStorage.getItem('geo_inventario');
+    if (saved) return JSON.parse(saved);
     return INVENTARIO_INICIAL.map(item => ({
       ...item,
       currentVol: item.unitVol * item.quantity,
       initialVol: item.unitVol * item.quantity
     }));
   });
+
+  useEffect(() => {
+    localStorage.setItem('geo_inventario', JSON.stringify(inventario));
+  }, [inventario]);
 
   // Estado del planificador / simulador dinámico por MUESTRAS (comerciales/reales)
   const [simMetalesSamples, setSimMetalesSamples] = useState(0); 
@@ -182,11 +188,19 @@ function App() {
   const [simAguasNoAcuosasSamples, setSimAguasNoAcuosasSamples] = useState(0); 
 
   // Historial de consumo real de reactivos registrados
-  const [history, setHistory] = useState([
-    { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
-    { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
-    { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
-  ]);
+  const [history, setHistory] = useState(() => {
+    const saved = localStorage.getItem('geo_history');
+    if (saved) return JSON.parse(saved);
+    return [
+      { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
+      { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
+      { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('geo_history', JSON.stringify(history));
+  }, [history]);
 
   // Formulario para registrar muestras reales
   const [formMethod, setFormMethod] = useState("Metales Suelo");
@@ -209,10 +223,18 @@ function App() {
   const [newReagentQty, setNewReagentQty] = useState(1);
 
   // --- Estado de Ocupación de Laboratorio ---
-  const [registrosLaboratorio, setRegistrosLaboratorio] = useState([
+  const [registrosLaboratorio, setRegistrosLaboratorio] = useState(() => {
+    const saved = localStorage.getItem('geo_ocupacion');
+    if (saved) return JSON.parse(saved);
+    return [
       { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geo metalurgia", fecha: "2026-08-03", horas: 6 },
       { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Aguas Superficiales", fecha: "2026-08-04", horas: 4 }
-  ]);
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('geo_ocupacion', JSON.stringify(registrosLaboratorio));
+  }, [registrosLaboratorio]);
   const [isOcupacionModalOpen, setIsOcupacionModalOpen] = useState(false);
   const [ocDocente, setOcDocente] = useState("");
   const [ocCurso, setOcCurso] = useState("");
