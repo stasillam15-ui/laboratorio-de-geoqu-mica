@@ -194,11 +194,14 @@ const COLORES_DOCENTES = {
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   
+  const [dbError, setDbError] = useState(false);
+
   // Estado real de volumen en las botellas (físico disminuye con registros reales)
   const [inventario, setInventario] = useState([]);
 
   useEffect(() => {
     const unsubscribe = db.collection('inventario').onSnapshot(snapshot => {
+      setDbError(false);
       if (!snapshot.empty) {
         const data = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
         data.sort((a, b) => a.id - b.id);
@@ -209,9 +212,21 @@ function App() {
           currentVol: item.unitVol * item.quantity,
           initialVol: item.unitVol * item.quantity
         }));
-        initialData.forEach(item => db.collection('inventario').add(item));
+        setInventario(initialData);
+        initialData.forEach(item => db.collection('inventario').add(item).catch(e => {
+            console.error(e); setDbError(true);
+        }));
       }
-    }, err => console.error("Error fetching inventario: ", err));
+    }, err => {
+      console.error("Error fetching inventario: ", err);
+      setDbError(true);
+      const initialData = INVENTARIO_INICIAL.map(item => ({
+        ...item,
+        currentVol: item.unitVol * item.quantity,
+        initialVol: item.unitVol * item.quantity
+      }));
+      setInventario(initialData);
+    });
     return () => unsubscribe();
   }, []);
 
@@ -235,9 +250,20 @@ function App() {
           { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
           { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
         ];
-        initialHistory.forEach(item => db.collection('history').add(item));
+        setHistory(initialHistory);
+        initialHistory.forEach(item => db.collection('history').add(item).catch(e => {
+            console.error(e); setDbError(true);
+        }));
       }
-    }, err => console.error("Error fetching history: ", err));
+    }, err => {
+      console.error("Error fetching history: ", err);
+      setDbError(true);
+      setHistory([
+        { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
+        { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
+        { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
+      ]);
+    });
     return () => unsubscribe();
   }, []);
 
@@ -280,9 +306,19 @@ function App() {
           { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geoestadística", fecha: "2026-08-03", horas: 6 },
           { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Química Analítica", fecha: "2026-08-04", horas: 4 }
         ];
-        initialOcupacion.forEach(item => db.collection('ocupacion').add(item));
+        setRegistrosLaboratorio(initialOcupacion);
+        initialOcupacion.forEach(item => db.collection('ocupacion').add(item).catch(e => {
+            console.error(e); setDbError(true);
+        }));
       }
-    }, err => console.error("Error fetching ocupacion: ", err));
+    }, err => {
+      console.error("Error fetching ocupacion: ", err);
+      setDbError(true);
+      setRegistrosLaboratorio([
+        { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geoestadística", fecha: "2026-08-03", horas: 6 },
+        { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Química Analítica", fecha: "2026-08-04", horas: 4 }
+      ]);
+    });
     return () => unsubscribe();
   }, []);
   const [isOcupacionModalOpen, setIsOcupacionModalOpen] = useState(false);
@@ -1014,7 +1050,13 @@ function App() {
         </nav>
       </header>
 
-      {/* NOTIFICACIÓN FLOTANTE */}
+      {/* NOTIFICACIÓN FLOTANTE Y ERRORES */}
+      {dbError && (
+        <div className="bg-red-500 text-white p-4 text-center shadow-md font-medium text-sm relative z-50">
+          ⚠️ <strong>¡Error de Permisos en la Base de Datos!</strong> Firebase está bloqueando el acceso o no encuentra la base de datos.<br />
+          Para solucionarlo: Entra a tu consola de Firebase ➔ Firestore Database ➔ Reglas, y asegúrate de que diga <code>allow read, write: if true;</code>
+        </div>
+      )}
       {notification && (
         <div className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl transition-all duration-350 border ${
           notification.type === 'success' 
@@ -2055,46 +2097,3 @@ function App() {
                                 <label className="text-xs font-bold text-slate-700">Fecha del ingreso</label>
                                 <input type="date" required value={ocFecha} onChange={e => setOcFecha(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition" />
                             </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-700">Horas de uso continuo</label>
-                                <input type="number" required min="1" max="24" value={ocHoras} onChange={e => setOcHoras(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold font-mono text-slate-800 outline-none focus:border-indigo-500 transition" />
-                            </div>
-
-                            <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsOcupacionModalOpen(false)} className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">
-                                    Cancelar
-                                </button>
-                                <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
-                                    Guardar Registro
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-          </div>
-        )}
-
-      </main>
-
-      {/* FOOTER */}
-      <footer className="bg-white border-t border-slate-200 p-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
-        <div>
-          <span>© 2026 TraceLabs Inc. Licencia Química Certificada.</span>
-        </div>
-        <div className="flex gap-4 font-bold">
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conectado a Core</span>
-          <span className="flex items-center gap-1 text-indigo-600"><Sparkles className="w-3.5 h-3.5" /> Antigravity Compliant</span>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-        // Renderizado de la aplicación en el DOM
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
