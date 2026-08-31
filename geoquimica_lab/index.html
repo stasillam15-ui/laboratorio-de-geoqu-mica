@@ -154,25 +154,50 @@
     <section id="epp" class="section-padding">
         <div class="container">
             <h2 class="section-title reveal">Visitas y Prácticas</h2>
-            <div class="reveal" style="background: var(--bg-white); padding: 2.5rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-left: 5px solid var(--accent-color);">
-                <p style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-color);">La seguridad es nuestra máxima prioridad. Para acceder a las instalaciones del Laboratorio de Geoquímica, todas las visitas deben portar obligatoriamente el siguiente Equipo de Protección Personal (EPP):</p>
-                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
-                        <i class="fas fa-user-md" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <span><strong>Bata de laboratorio</strong> (manga larga y abotonada)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
-                        <i class="fas fa-glasses" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <span><strong>Lentes de seguridad</strong> (protección lateral)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
-                        <i class="fas fa-shoe-prints" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <span><strong>Calzado cerrado</strong> (zapatos o botas)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg-light); border-radius: 8px;">
-                        <i class="fas fa-hands-wash" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <span><strong>Guantes de nitrilo</strong> (proporcionados en el lab)</span>
-                    </div>
+            <p class="reveal" style="margin-bottom: 2rem; font-size: 1.1rem; color: var(--text-color); text-align: center; max-width: 800px; margin-left: auto; margin-right: auto;">La seguridad es nuestra máxima prioridad. Para acceder a las diferentes áreas del Laboratorio de Geoquímica, todas las visitas deben portar obligatoriamente el siguiente Equipo de Protección Personal (EPP) según el área:</p>
+            
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                <!-- Instrumental -->
+                <div class="reveal" style="background: var(--bg-white); padding: 2rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-top: 5px solid var(--accent-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.25rem;"><i class="fas fa-microscope" style="margin-right: 10px; color: var(--accent-color);"></i>EPPS para Análisis Instrumental</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-user-md" style="color: var(--primary-color); width: 20px;"></i> Bata de laboratorio (manga larga)</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-glasses" style="color: var(--primary-color); width: 20px;"></i> Lentes de seguridad</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-shoe-prints" style="color: var(--primary-color); width: 20px;"></i> Calzado cerrado</li>
+                        <li style="display: flex; align-items: center; gap: 12px;"><i class="fas fa-hands-wash" style="color: var(--primary-color); width: 20px;"></i> Guantes de nitrilo</li>
+                    </ul>
+                </div>
+                <!-- Físico -->
+                <div class="reveal" style="background: var(--bg-white); padding: 2rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-top: 5px solid var(--accent-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.25rem;"><i class="fas fa-weight-hanging" style="margin-right: 10px; color: var(--accent-color);"></i>EPPS para Análisis Físico</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-user-md" style="color: var(--primary-color); width: 20px;"></i> Bata de laboratorio</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-glasses" style="color: var(--primary-color); width: 20px;"></i> Lentes de seguridad</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-shoe-prints" style="color: var(--primary-color); width: 20px;"></i> Calzado cerrado</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-mask" style="color: var(--primary-color); width: 20px;"></i> Respirador elastomérico de media cara reutilizable</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-hands-wash" style="color: var(--primary-color); width: 20px;"></i> Guantes de nitrilo reforzado o cuero flexible</li>
+                        <li style="display: flex; align-items: center; gap: 12px;"><i class="fas fa-headphones" style="color: var(--primary-color); width: 20px;"></i> Protección auditiva: Tapones o protectores tipo copa</li>
+                    </ul>
+                </div>
+                <!-- Volumétrico -->
+                <div class="reveal" style="background: var(--bg-white); padding: 2rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-top: 5px solid var(--accent-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.25rem;"><i class="fas fa-flask" style="margin-right: 10px; color: var(--accent-color);"></i>EPPS para Análisis Volumétrico</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-user-md" style="color: var(--primary-color); width: 20px;"></i> Bata de laboratorio</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-glasses" style="color: var(--primary-color); width: 20px;"></i> Gafas contra salpicaduras</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-shoe-prints" style="color: var(--primary-color); width: 20px;"></i> Calzado antideslizante</li>
+                        <li style="display: flex; align-items: center; gap: 12px;"><i class="fas fa-hands-wash" style="color: var(--primary-color); width: 20px;"></i> Guantes de nitrilo / látex</li>
+                    </ul>
+                </div>
+                <!-- Electroquímico -->
+                <div class="reveal" style="background: var(--bg-white); padding: 2rem; border-radius: 8px; box-shadow: var(--shadow-sm); border-top: 5px solid var(--accent-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.25rem;"><i class="fas fa-bolt" style="margin-right: 10px; color: var(--accent-color);"></i>EPPS para Análisis Electroquímico</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-user-md" style="color: var(--primary-color); width: 20px;"></i> Bata de algodón (antiestática)</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-glasses" style="color: var(--primary-color); width: 20px;"></i> Lentes de seguridad</li>
+                        <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;"><i class="fas fa-shoe-prints" style="color: var(--primary-color); width: 20px;"></i> Calzado dieléctrico</li>
+                        <li style="display: flex; align-items: center; gap: 12px;"><i class="fas fa-hands-wash" style="color: var(--primary-color); width: 20px;"></i> Guantes aislantes</li>
+                    </ul>
                 </div>
             </div>
         </div>
