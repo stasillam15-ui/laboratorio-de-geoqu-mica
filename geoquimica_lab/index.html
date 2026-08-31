@@ -22,6 +22,7 @@
                 <li><a href="#investigacion">Líneas de Investigación</a></li>
                 <li><a href="#epp">Visitas y Prácticas</a></li>
                 <li><a href="#contacto">Contacto</a></li>
+                <li><a href="#documentos">Formatos</a></li>
                 <li><a href="#" id="loginBtn" style="color: var(--primary-color); font-weight: 700;"><i class="fas fa-user-circle"></i> Iniciar Sesión</a></li>
             </ul>
             <div class="hamburger">
@@ -260,6 +261,42 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Enviar Mensaje</button>
                     </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Documentos: Requisitos para Ingreso de Muestras -->
+    <section id="documentos" class="section-padding">
+        <div class="container">
+            <h2 class="section-title reveal">Requisitos para Ingreso de Muestras</h2>
+            <p class="reveal" style="margin-bottom: 2.5rem; font-size: 1.1rem; color: var(--text-color); text-align: center; max-width: 700px; margin-left: auto; margin-right: auto;">Descarga, imprime y completa los siguientes documentos. Son indispensables para procesar la recepción de tus muestras en el laboratorio.</p>
+            
+            <div class="grid reveal" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 800px; margin: 0 auto;">
+                
+                <!-- Tarjeta Cadena de Custodia -->
+                <div style="background: var(--bg-white); border-radius: 12px; padding: 2.5rem; text-align: center; box-shadow: var(--shadow-md); border-top: 5px solid var(--primary-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="width: 70px; height: 70px; background: rgba(30, 58, 138, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                        <i class="fas fa-file-pdf" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                    </div>
+                    <h3 style="color: var(--primary-color); font-size: 1.4rem; margin-bottom: 1rem;">Cadena de Custodia</h3>
+                    <p style="color: var(--text-color); margin-bottom: 2rem; font-size: 0.95rem;">Documento legal que garantiza la trazabilidad e integridad de las muestras desde la recolección hasta su análisis.</p>
+                    <a href="cadena_custodia.pdf" download class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center;">
+                        <i class="fas fa-download"></i> Descargar PDF
+                    </a>
+                </div>
+
+                <!-- Tarjeta Etiqueta -->
+                <div style="background: var(--bg-white); border-radius: 12px; padding: 2.5rem; text-align: center; box-shadow: var(--shadow-md); border-top: 5px solid var(--accent-color); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="width: 70px; height: 70px; background: rgba(14, 165, 233, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                        <i class="fas fa-tags" style="font-size: 2.5rem; color: var(--accent-color);"></i>
+                    </div>
+                    <h3 style="color: var(--primary-color); font-size: 1.4rem; margin-bottom: 1rem;">Etiqueta de Muestra</h3>
+                    <p style="color: var(--text-color); margin-bottom: 2rem; font-size: 0.95rem;">Plantilla estándar para la identificación unívoca de cada muestra. Debe ir adherida de forma segura a cada envase.</p>
+                    <a href="etiqueta_muestra.pdf" download class="btn" style="background: var(--accent-color); color: white; display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center; border-radius: 6px; padding: 0.75rem 1.5rem; font-weight: 600; text-decoration: none; transition: background 0.3s ease;" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='var(--accent-color)'">
+                        <i class="fas fa-download"></i> Descargar PDF
+                    </a>
                 </div>
 
             </div>
