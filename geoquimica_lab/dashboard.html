@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js para los gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase v8 Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
     <!-- React y ReactDOM UMD -->
     <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
@@ -66,6 +69,23 @@
           X,
           FolderOpen
         } = window.LucideReact;
+
+// CONFIGURACIÓN DE FIREBASE (Añadido por el usuario)
+const firebaseConfig = {
+  apiKey: "AIzaSyDckFIdQna1YlCQvy_m5oAbbtrVz3OaQXI",
+  authDomain: "labgeo-dashboard.firebaseapp.com",
+  projectId: "labgeo-dashboard",
+  storageBucket: "labgeo-dashboard.firebasestorage.app",
+  messagingSenderId: "569846479201",
+  appId: "1:569846479201:web:b955b99ccf6691c758ad20",
+  measurementId: "G-ET1JH6116S"
+};
+
+// Inicializar Firebase (v8 compat)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
 // BASE DE DATOS INICIAL EXTRAÍDA DE LAS IMÁGENES DEL USUARIO
 const INVENTARIO_INICIAL = [
@@ -175,19 +195,25 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // Estado real de volumen en las botellas (físico disminuye con registros reales)
-  const [inventario, setInventario] = useState(() => {
-    const saved = localStorage.getItem('geo_inventario');
-    if (saved) return JSON.parse(saved);
-    return INVENTARIO_INICIAL.map(item => ({
-      ...item,
-      currentVol: item.unitVol * item.quantity,
-      initialVol: item.unitVol * item.quantity
-    }));
-  });
+  const [inventario, setInventario] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('geo_inventario', JSON.stringify(inventario));
-  }, [inventario]);
+    const unsubscribe = db.collection('inventario').onSnapshot(snapshot => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+        data.sort((a, b) => a.id - b.id);
+        setInventario(data);
+      } else {
+        const initialData = INVENTARIO_INICIAL.map(item => ({
+          ...item,
+          currentVol: item.unitVol * item.quantity,
+          initialVol: item.unitVol * item.quantity
+        }));
+        initialData.forEach(item => db.collection('inventario').add(item));
+      }
+    }, err => console.error("Error fetching inventario: ", err));
+    return () => unsubscribe();
+  }, []);
 
   // Estado del planificador / simulador dinámico por MUESTRAS (comerciales/reales)
   const [simMetalesSamples, setSimMetalesSamples] = useState(0); 
@@ -196,19 +222,24 @@ function App() {
   const [simAguasNoAcuosasSamples, setSimAguasNoAcuosasSamples] = useState(0); 
 
   // Historial de consumo real de reactivos registrados
-  const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('geo_history');
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
-      { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
-      { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
-    ];
-  });
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('geo_history', JSON.stringify(history));
-  }, [history]);
+    const unsubscribe = db.collection('history').orderBy('id', 'desc').onSnapshot(snapshot => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+        setHistory(data);
+      } else {
+        const initialHistory = [
+          { id: 1, date: "2026-06-10", method: "Metales Suelo", samples: 60, qc: 8, totalTests: 68, hno3: 680, hcl: 680, h2o2: 204, notes: "Campaña de Suelos Zona Norte" },
+          { id: 2, date: "2026-06-12", method: "Oro y Plata", samples: 30, qc: 5, totalTests: 35, hno3: 175, hcl: 875, h2o2: 0, notes: "Control de calidad Ley de Oro" },
+          { id: 3, date: "2026-06-14", method: "Aguas Acuosas", samples: 90, qc: 11, totalTests: 101, hno3: 202, hcl: 0, h2o2: 0, notes: "Monitoreo Ambiental de Aguas Cuenca Sur" }
+        ];
+        initialHistory.forEach(item => db.collection('history').add(item));
+      }
+    }, err => console.error("Error fetching history: ", err));
+    return () => unsubscribe();
+  }, []);
 
   // Formulario para registrar muestras reales
   const [formMethod, setFormMethod] = useState("Metales Suelo");
@@ -237,18 +268,23 @@ function App() {
   const [newReagentQty, setNewReagentQty] = useState(1);
 
   // --- Estado de Ocupación de Laboratorio ---
-  const [registrosLaboratorio, setRegistrosLaboratorio] = useState(() => {
-    const saved = localStorage.getItem('geo_ocupacion');
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geoestadística", fecha: "2026-08-03", horas: 6 },
-      { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Química Analítica", fecha: "2026-08-04", horas: 4 }
-    ];
-  });
+  const [registrosLaboratorio, setRegistrosLaboratorio] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('geo_ocupacion', JSON.stringify(registrosLaboratorio));
-  }, [registrosLaboratorio]);
+    const unsubscribe = db.collection('ocupacion').orderBy('id', 'desc').onSnapshot(snapshot => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+        setRegistrosLaboratorio(data);
+      } else {
+        const initialOcupacion = [
+          { id: 1, docente: "Dr. Wilder Chuquiruna", curso: "Geoestadística", fecha: "2026-08-03", horas: 6 },
+          { id: 2, docente: "M.Sc. Sandra Medina Paredes", curso: "Química Analítica", fecha: "2026-08-04", horas: 4 }
+        ];
+        initialOcupacion.forEach(item => db.collection('ocupacion').add(item));
+      }
+    }, err => console.error("Error fetching ocupacion: ", err));
+    return () => unsubscribe();
+  }, []);
   const [isOcupacionModalOpen, setIsOcupacionModalOpen] = useState(false);
   const [ocDocente, setOcDocente] = useState("");
   const [ocCurso, setOcCurso] = useState("");
@@ -423,45 +459,48 @@ function App() {
     }
 
     // Descontar del inventario físico (FIFO)
-    setInventario(prevInv => {
-      let remHno3 = hno3Gasto;
-      let remHcl = hclGasto;
-      let remH2o2 = h2o2Gasto;
+    const batch = db.batch();
 
-      return prevInv.map(item => {
-        if (item.state !== "Vigente") return item;
-        let updateCurrent = item.currentVol;
+    let remHno3 = hno3Gasto;
+    let remHcl = hclGasto;
+    let remH2o2 = h2o2Gasto;
 
-        if (item.name === "Ácido Nitrico" && remHno3 > 0) {
-          if (updateCurrent >= remHno3) {
-            updateCurrent -= remHno3;
-            remHno3 = 0;
-          } else {
-            remHno3 -= updateCurrent;
-            updateCurrent = 0;
-          }
-        }
-        if (item.name === "Ácido clorhídrico" && remHcl > 0) {
-          if (updateCurrent >= remHcl) {
-            updateCurrent -= remHcl;
-            remHcl = 0;
-          } else {
-            remHcl -= updateCurrent;
-            updateCurrent = 0;
-          }
-        }
-        if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
-          if (updateCurrent >= remH2o2) {
-            updateCurrent -= remH2o2;
-            remH2o2 = 0;
-          } else {
-            remH2o2 -= updateCurrent;
-            updateCurrent = 0;
-          }
-        }
+    inventario.forEach(item => {
+      if (item.state !== "Vigente") return;
+      let updateCurrent = item.currentVol;
 
-        return { ...item, currentVol: updateCurrent };
-      });
+      if (item.name === "Ácido Nitrico" && remHno3 > 0) {
+        if (updateCurrent >= remHno3) {
+          updateCurrent -= remHno3;
+          remHno3 = 0;
+        } else {
+          remHno3 -= updateCurrent;
+          updateCurrent = 0;
+        }
+      }
+      if (item.name === "Ácido clorhídrico" && remHcl > 0) {
+        if (updateCurrent >= remHcl) {
+          updateCurrent -= remHcl;
+          remHcl = 0;
+        } else {
+          remHcl -= updateCurrent;
+          updateCurrent = 0;
+        }
+      }
+      if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
+        if (updateCurrent >= remH2o2) {
+          updateCurrent -= remH2o2;
+          remH2o2 = 0;
+        } else {
+          remH2o2 -= updateCurrent;
+          updateCurrent = 0;
+        }
+      }
+
+      if (updateCurrent !== item.currentVol && item.docId) {
+        const ref = db.collection('inventario').doc(item.docId);
+        batch.update(ref, { currentVol: updateCurrent });
+      }
     });
 
     // Añadir al historial
@@ -478,17 +517,22 @@ function App() {
       notes: formNotes || "Registro manual de corrida"
     };
 
-    setHistory(prev => [nuevoRegistro, ...prev]);
+    const newHistoryRef = db.collection('history').doc();
+    batch.set(newHistoryRef, nuevoRegistro);
 
-    // Limpieza
-    setFormSamples(10);
-    setFormNotes("");
-    setIsCustomConsumption(false);
-    setCustomHno3(0);
-    setCustomHcl(0);
-    setCustomH2o2(0);
-
-    triggerNotification("🚀 Corrida de análisis registrada. El stock de frascos y las gráficas se actualizaron.", "success");
+    batch.commit().then(() => {
+      // Limpieza
+      setFormSamples(10);
+      setFormNotes("");
+      setIsCustomConsumption(false);
+      setCustomHno3(0);
+      setCustomHcl(0);
+      setCustomH2o2(0);
+      triggerNotification("🚀 Corrida de análisis registrada en la nube. El stock se actualizó.", "success");
+    }).catch(err => {
+      console.error(err);
+      triggerNotification("⚠️ Hubo un error al sincronizar con la nube.", "error");
+    });
   };
 
   // REGISTRO DE PREPARACIÓN DE SOLUCIONES
@@ -510,23 +554,24 @@ function App() {
       return;
     }
 
-    // Descontar del inventario físico (FIFO)
-    setInventario(prevInv => {
-      let remVol = volNum;
-      return prevInv.map(item => {
-        if (item.state !== "Vigente" || item.name !== solReactivo) return item;
-        let updateCurrent = item.currentVol;
-        if (remVol > 0) {
-          if (updateCurrent >= remVol) {
-            updateCurrent -= remVol;
-            remVol = 0;
-          } else {
-            remVol -= updateCurrent;
-            updateCurrent = 0;
-          }
+    const batch = db.batch();
+    let remVol = volNum;
+
+    inventario.forEach(item => {
+      if (item.state !== "Vigente" || item.name !== solReactivo) return;
+      let updateCurrent = item.currentVol;
+      if (remVol > 0) {
+        if (updateCurrent >= remVol) {
+          updateCurrent -= remVol;
+          remVol = 0;
+        } else {
+          remVol -= updateCurrent;
+          updateCurrent = 0;
         }
-        return { ...item, currentVol: updateCurrent };
-      });
+      }
+      if (updateCurrent !== item.currentVol && item.docId) {
+        batch.update(db.collection('inventario').doc(item.docId), { currentVol: updateCurrent });
+      }
     });
 
     // Añadir al historial
@@ -543,9 +588,16 @@ function App() {
       notes: `Preparación de solución de ${solReactivo} (${volNum} mL/g)`
     };
 
-    setHistory(prev => [nuevoRegistro, ...prev]);
-    setSolVolumen(100);
-    triggerNotification("🧪 Gasto por preparación de solución registrado con éxito.", "success");
+    const newHistoryRef = db.collection('history').doc();
+    batch.set(newHistoryRef, nuevoRegistro);
+
+    batch.commit().then(() => {
+      setSolVolumen(100);
+      triggerNotification("🧪 Gasto por preparación de solución registrado en la nube.", "success");
+    }).catch(err => {
+      console.error(err);
+      triggerNotification("⚠️ Error al sincronizar con la nube.", "error");
+    });
   };
 
   // AGREGAR NUEVO FRASCO AL INVENTARIO
@@ -571,72 +623,88 @@ function App() {
       initialVol: totalVolume
     };
 
-    setInventario(prev => [...prev, nuevoItem]);
-    setNewReagentLot("");
-    triggerNotification(`📦 Añadidos ${newReagentQty} frascos de ${newReagentName} al stock general.`, "success");
+    db.collection('inventario').add(nuevoItem).then(() => {
+      setNewReagentLot("");
+      triggerNotification(`📦 Añadidos ${newReagentQty} frascos de ${newReagentName} a la nube.`, "success");
+    }).catch(err => {
+      console.error(err);
+      triggerNotification("⚠️ Error al sincronizar con la nube.", "error");
+    });
   };
 
   // CAMBIAR ESTADO DE REACTIVOS
   const toggleReagentState = (id, newState) => {
-    setInventario(prev => prev.map(item => {
-      if (item.id === id) {
-        const currentVol = newState === 'Agotado' ? 0 : item.initialVol;
-        return { ...item, state: newState, currentVol };
-      }
-      return item;
-    }));
-    triggerNotification("🔧 Estado del frasco actualizado con éxito.", "success");
+    const item = inventario.find(i => i.id === id);
+    if (item && item.docId) {
+      const currentVol = newState === 'Agotado' ? 0 : item.initialVol;
+      db.collection('inventario').doc(item.docId).update({ state: newState, currentVol }).then(() => {
+        triggerNotification("🔧 Estado del frasco actualizado en la nube.", "success");
+      }).catch(err => {
+        console.error(err);
+        triggerNotification("⚠️ Error al sincronizar estado.", "error");
+      });
+    }
   };
 
   // ELIMINAR REGISTRO DE TRABAJO Y DEVOLVER REACTIVOS AL STOCK
   const handleDeleteLog = (log) => {
-    setInventario(prevInv => {
-      let remHno3 = log.hno3;
-      let remHcl = log.hcl;
-      let remH2o2 = log.h2o2;
+    const batch = db.batch();
 
-      return prevInv.map(item => {
-        if (item.state !== "Vigente") return item;
-        let updateCurrent = item.currentVol;
-        const maxCapacity = item.unitVol * item.quantity;
+    let remHno3 = log.hno3;
+    let remHcl = log.hcl;
+    let remH2o2 = log.h2o2;
 
-        if (item.name === "Ácido Nitrico" && remHno3 > 0) {
-          const space = maxCapacity - updateCurrent;
-          if (space >= remHno3) {
-            updateCurrent += remHno3;
-            remHno3 = 0;
-          } else {
-            remHno3 -= space;
-            updateCurrent = maxCapacity;
-          }
-        }
-        if (item.name === "Ácido clorhídrico" && remHcl > 0) {
-          const space = maxCapacity - updateCurrent;
-          if (space >= remHcl) {
-            updateCurrent += remHcl;
-            remHcl = 0;
-          } else {
-            remHcl -= space;
-            updateCurrent = maxCapacity;
-          }
-        }
-        if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
-          const space = maxCapacity - updateCurrent;
-          if (space >= remH2o2) {
-            updateCurrent += remH2o2;
-            remH2o2 = 0;
-          } else {
-            remH2o2 -= space;
-            updateCurrent = maxCapacity;
-          }
-        }
+    inventario.forEach(item => {
+      if (item.state !== "Vigente") return;
+      let updateCurrent = item.currentVol;
+      const maxCapacity = item.unitVol * item.quantity;
 
-        return { ...item, currentVol: updateCurrent };
-      });
+      if (item.name === "Ácido Nitrico" && remHno3 > 0) {
+        const space = maxCapacity - updateCurrent;
+        if (space >= remHno3) {
+          updateCurrent += remHno3;
+          remHno3 = 0;
+        } else {
+          remHno3 -= space;
+          updateCurrent = maxCapacity;
+        }
+      }
+      if (item.name === "Ácido clorhídrico" && remHcl > 0) {
+        const space = maxCapacity - updateCurrent;
+        if (space >= remHcl) {
+          updateCurrent += remHcl;
+          remHcl = 0;
+        } else {
+          remHcl -= space;
+          updateCurrent = maxCapacity;
+        }
+      }
+      if (item.name === "Peróxido de hidrógeno 30%" && remH2o2 > 0) {
+        const space = maxCapacity - updateCurrent;
+        if (space >= remH2o2) {
+          updateCurrent += remH2o2;
+          remH2o2 = 0;
+        } else {
+          remH2o2 -= space;
+          updateCurrent = maxCapacity;
+        }
+      }
+
+      if (updateCurrent !== item.currentVol && item.docId) {
+        batch.update(db.collection('inventario').doc(item.docId), { currentVol: updateCurrent });
+      }
     });
 
-    setHistory(prev => prev.filter(item => item.id !== log.id));
-    triggerNotification("🗑️ Registro de corrida eliminado. Los reactivos fueron repuestos en sus respectivos envases.", "success");
+    if (log.docId) {
+      batch.delete(db.collection('history').doc(log.docId));
+    }
+
+    batch.commit().then(() => {
+      triggerNotification("🗑️ Registro eliminado de la nube. Los reactivos fueron repuestos.", "success");
+    }).catch(err => {
+      console.error(err);
+      triggerNotification("⚠️ Error al sincronizar con la nube.", "error");
+    });
   };
 
   const triggerNotification = (msg, type = "success") => {
@@ -684,17 +752,28 @@ function App() {
       fecha: ocFecha,
       horas: Number(ocHoras)
     };
-    setRegistrosLaboratorio(prev => [nuevoRegistro, ...prev]);
-    setIsOcupacionModalOpen(false);
-    setOcDocente("");
-    setOcCurso("");
-    setOcHoras(1);
-    triggerNotification("Registro de ocupación agregado exitosamente.", "success");
+    db.collection('ocupacion').add(nuevoRegistro).then(() => {
+      setIsOcupacionModalOpen(false);
+      setOcDocente("");
+      setOcCurso("");
+      setOcHoras(1);
+      triggerNotification("Registro de ocupación guardado en la nube.", "success");
+    }).catch(err => {
+      console.error(err);
+      triggerNotification("⚠️ Error al sincronizar con la nube.", "error");
+    });
   };
 
   const handleEliminarOcupacion = (id) => {
-    setRegistrosLaboratorio(prev => prev.filter(reg => reg.id !== id));
-    triggerNotification("Registro de ocupación eliminado.", "success");
+    const reg = registrosLaboratorio.find(r => r.id === id);
+    if (reg && reg.docId) {
+      db.collection('ocupacion').doc(reg.docId).delete().then(() => {
+        triggerNotification("Registro de ocupación eliminado de la nube.", "success");
+      }).catch(err => {
+        console.error(err);
+        triggerNotification("⚠️ Error al eliminar de la nube.", "error");
+      });
+    }
   };
 
   useEffect(() => {
