@@ -2097,3 +2097,46 @@ function App() {
                                 <label className="text-xs font-bold text-slate-700">Fecha del ingreso</label>
                                 <input type="date" required value={ocFecha} onChange={e => setOcFecha(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 transition" />
                             </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-700">Horas de uso continuo</label>
+                                <input type="number" required min="1" max="24" value={ocHoras} onChange={e => setOcHoras(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold font-mono text-slate-800 outline-none focus:border-indigo-500 transition" />
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                                <button type="button" onClick={() => setIsOcupacionModalOpen(false)} className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm">
+                                    Guardar Registro
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+          </div>
+        )}
+
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-white border-t border-slate-200 p-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
+        <div>
+          <span>© 2026 TraceLabs Inc. Licencia Química Certificada.</span>
+        </div>
+        <div className="flex gap-4 font-bold">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Conectado a Core</span>
+          <span className="flex items-center gap-1 text-indigo-600"><Sparkles className="w-3.5 h-3.5" /> Antigravity Compliant</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+        // Renderizado de la aplicación en el DOM
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
